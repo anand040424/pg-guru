@@ -409,6 +409,8 @@ button[onclick^="pick("]{text-align:left;font-weight:700;max-width:100%}
 .row:has(>button[onclick^="pick("]){flex-wrap:wrap;justify-content:flex-start;align-items:center}
 .row:has(>button[onclick^="pick("]) .muted{flex:1 1 100%;min-width:0;margin:-2px 0 0 2px}
 .row:has(>button[onclick^="pick("]) button.s{margin:0}
+/* Field validation: red border on the field that needs fixing */
+.field-err{border-color:var(--bad) !important;box-shadow:0 0 0 3px rgba(220,38,38,.18) !important}
 </style>
 </head>
 <body>
@@ -429,7 +431,19 @@ normBeds();
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){flash('Could not save on this device. Export a backup.',true);}}
 function flash(t,bad){ui.msg=t;ui.bad=!!bad;}
-function fail(t){flash(t,true);render();}
+let fieldErrs=[];
+function fail(t,fields){flash(t,true);keepInputs(fields);render();}
+function failMany(list){fail(list.map(x=>x[0]).join(' '),list.map(x=>x[1]));}
+/* Remember what the user typed so an error never wipes the form; the bad field gets a red border */
+function keepInputs(fields){ui.keep={};document.querySelectorAll('input,select,textarea').forEach(el=>{if(el.id)ui.keep[el.id]=el.type==='checkbox'?el.checked:el.value;});fieldErrs=fields||[];}
+function applyKeep(){
+  const k=ui.keep; ui.keep=null;
+  if(k)for(const id in k){const el=document.getElementById(id);if(!el)continue;if(el.type==='checkbox')el.checked=!!k[id];else el.value=k[id];}
+  fieldErrs.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add('field-err');});
+  fieldErrs=[];
+}
+document.addEventListener('input',e=>{if(e.target&&e.target.classList)e.target.classList.remove('field-err');});
+document.addEventListener('change',e=>{if(e.target&&e.target.classList)e.target.classList.remove('field-err');});
 
 const $=id=>document.getElementById(id).value.trim();
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -606,14 +620,15 @@ function otpCode(){return String(Math.floor(100000+Math.random()*900000));}
 function maskMobile(m){return '******'+String(m).slice(-4);}
 function maskEmail(e){const [a,d]=String(e).split('@');return (a[0]||'')+'***@'+d;}
 function demoCode(code){return `<div class="demo-code">Demo code: <b>${code}</b><div class="muted">In the hosted app this code is sent by SMS or email. It is shown here because this preview cannot send messages.</div></div>`;}
-function authErr(t){ui.auth.err=t;render();}
+function authErr(t,fields){ui.auth.err=t;keepInputs(fields);render();}
+function fbField(e){const c=e.code;if(c==='auth/email-already-in-use'||c==='auth/invalid-email')return['sid'];if(c==='auth/weak-password')return['spw'];return[];}
 function authGo(view){ui.auth={view,method:null,step:1,otp:null,err:''};render();}
 function chooseMethod(m){ui.auth.method=m;ui.auth.step=1;ui.auth.err='';render();}
 function signIn(id){const u=users.find(x=>x.id===id);session=id;localStorage.setItem(SESS_KEY,id);ui.auth={view:'landing'};ui.tab='dash';flash('Welcome, '+(u?u.name:'')+'.');render();}
 async function signOut(){if(fbAuth){try{await fbAuth.signOut();}catch(e){}}session=null;localStorage.removeItem(SESS_KEY);ui.tab='dash';flash('Signed out.');render();}
 function isEmail(s){return /^\S+@\S+\.\S+$/.test(String(s||''));}
 function fbMsg(e){
-  const m={'auth/email-already-in-use':'An account already exists with this email. Please sign in.','auth/invalid-email':'Enter a valid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/wrong-password':'Wrong password.','auth/invalid-credential':'Wrong email or password.','auth/user-not-found':'No account found for this email.','auth/too-many-requests':'Too many attempts. Please wait a few minutes and try again.','auth/network-request-failed':'Network problem. Check your connection and try again.'};
+  const m={'auth/email-already-in-use':'An account already exists with this email. Please sign in.','auth/invalid-email':'Enter a valid email address.','auth/weak-password':'Password must be 8 to 14 characters.','auth/wrong-password':'Wrong password.','auth/invalid-credential':'Wrong email or password.','auth/user-not-found':'No account found for this email.','auth/too-many-requests':'Too many attempts. Please wait a few minutes and try again.','auth/network-request-failed':'Network problem. Check your connection and try again.'};
   return m[e.code]||('Something went wrong: '+(e.message||e.code));
 }
 function localUpsert(fu){
@@ -624,30 +639,30 @@ function localUpsert(fu){
 /* Mobile sign-up: demo code (SMS needs the Blaze plan) */
 function sendSignupCode(){
   const a=ui.auth, name=$('sn'), idv=$('sid');
-  if(!name)return authErr('Enter your name.');
-  if(normMobile(idv).length!==10)return authErr('Enter a valid 10-digit mobile number.');
-  if(findUser(idv))return authErr('An account already exists with this mobile. Please sign in.');
+  if(!name)return authErr('Enter your name.',['sn']);
+  if(normMobile(idv).length!==10)return authErr('Enter a valid 10-digit mobile number.',['sid']);
+  if(findUser(idv))return authErr('An account already exists with this mobile. Please sign in.',['sid']);
   a.name=name; a.idv=idv; a.otp=otpCode(); a.step=2; a.err=''; render();
 }
 function verifySignupCode(){
   const a=ui.auth;
-  if($('sotp')!==a.otp)return authErr('Wrong code. Please try again.');
+  if($('sotp')!==a.otp)return authErr('Wrong code. Please try again.',['sotp']);
   a.step=3; a.err=''; render();
 }
 function createAccount(){
   const a=ui.auth, pw=$('spw'), pw2=$('spw2');
-  if(pw.length<6)return authErr('Password must be at least 6 characters.');
-  if(pw!==pw2)return authErr('Passwords do not match.');
+  if(pw.length<8||pw.length>14)return authErr('Password must be 8 to 14 characters.',['spw']);
+  if(pw!==pw2)return authErr('Passwords do not match.',['spw','spw2']);
   const u={id:uid(),name:a.name,email:'',mobile:normMobile(a.idv),method:'mobile',pass:hash(pw),created:new Date().toISOString()};
   users.push(u); saveUsers(); signIn(u.id);
 }
 /* Email sign-up: Firebase creates the account and emails a verification link */
 async function createGoogleAccount(){
   const name=$('sn'), em=$('sid').toLowerCase(), pw=$('spw'), pw2=$('spw2');
-  if(!name)return authErr('Enter your name.');
-  if(!isEmail(em))return authErr('Enter a valid email address.');
-  if(pw.length<6)return authErr('Password must be at least 6 characters.');
-  if(pw!==pw2)return authErr('Passwords do not match.');
+  if(!name)return authErr('Enter your name.',['sn']);
+  if(!isEmail(em))return authErr('Enter a valid email address.',['sid']);
+  if(pw.length<8||pw.length>14)return authErr('Password must be 8 to 14 characters.',['spw']);
+  if(pw!==pw2)return authErr('Passwords do not match.',['spw','spw2']);
   if(!fbAuth)return authErr('Firebase is not connected.');
   try{
     const cred=await fbAuth.createUserWithEmailAndPassword(em,pw);
@@ -657,25 +672,26 @@ async function createGoogleAccount(){
     ui.auth={view:'signin'};
     flash('Account created. We sent a verification email to '+em+'. Open it, then sign in.');
     render();
-  }catch(err){authErr(fbMsg(err));}
+  }catch(err){authErr(fbMsg(err),fbField(err));}
 }
 /* Sign in: email uses Firebase; mobile uses the local demo accounts */
 async function doSignIn(){
   const em=$('aemail').toLowerCase(), mo=$('amob'), pw=$('apass');
-  if(!pw)return authErr('Enter your password.');
+  if(!pw)return authErr('Enter your password.',['apass']);
   if(em){
-    if(!isEmail(em))return authErr('Enter a valid email address.');
+    if(!isEmail(em))return authErr('Enter a valid email address.',['aemail']);
     if(!fbAuth)return authErr('Firebase is not connected.');
     try{
       const cred=await fbAuth.signInWithEmailAndPassword(em,pw);
-      if(!cred.user.emailVerified){await fbAuth.signOut();return authErr('Please verify your email first. Check your inbox, then sign in again.');}
+      if(!cred.user.emailVerified){await fbAuth.signOut();return authErr('Please verify your email first. Check your inbox, then sign in again.',['aemail']);}
       const u=localUpsert(cred.user); signIn(u.id);
-    }catch(err){authErr(fbMsg(err));}
+    }catch(err){authErr(fbMsg(err),['aemail','apass']);}
     return;
   }
+  if(mo.replace(/\D/g,'').length!==10)return authErr('Enter a valid 10-digit mobile number.',['amob']);
   const u=findUser(mo);
-  if(!u)return authErr('No account found for this mobile number.');
-  if(!u.pass||hash(pw)!==u.pass)return authErr('Wrong password.');
+  if(!u)return authErr('No account found for this mobile number.',['amob']);
+  if(!u.pass||hash(pw)!==u.pass)return authErr('Wrong password.',['apass']);
   signIn(u.id);
 }
 /* Forgot password: email gets a Firebase reset link; mobile uses the demo code */
@@ -688,27 +704,27 @@ async function fpSend(){
       ui.auth={view:'signin'};
       flash('If an account exists for '+id+', a reset link has been sent. Open it to set a new password.');
       render();
-    }catch(err){authErr(fbMsg(err));}
+    }catch(err){authErr(fbMsg(err),['fid']);}
     return;
   }
   const u=findUser(id);
-  if(!u)return authErr('No account found for this mobile number.');
+  if(!u)return authErr('No account found for this mobile number.',['fid']);
   const a=ui.auth; a.target=u.id; a.otp=otpCode(); a.step=2; a.err=''; render();
 }
 function fpReset(){
   const a=ui.auth, pw=$('fpw'), pw2=$('fpw2');
-  if($('fotp')!==a.otp)return authErr('Wrong code. Please try again.');
-  if(pw.length<6)return authErr('Password must be at least 6 characters.');
-  if(pw!==pw2)return authErr('Passwords do not match.');
+  if($('fotp')!==a.otp)return authErr('Wrong code. Please try again.',['fotp']);
+  if(pw.length<8||pw.length>14)return authErr('Password must be 8 to 14 characters.',['fpw']);
+  if(pw!==pw2)return authErr('Passwords do not match.',['fpw','fpw2']);
   const u=users.find(x=>x.id===a.target); if(!u)return authErr('Account not found.');
   u.pass=hash(pw); saveUsers(); ui.auth={view:'signin'}; flash('Password updated. Please sign in.'); render();
 }
 function fiSend(){
   const a=ui.auth, u=findUser($('fidm'));
-  if(!u)return authErr('No account found for this mobile number.');
+  if(!u)return authErr('No account found for this mobile number.',['fidm']);
   a.target=u.id; a.otp=otpCode(); a.step=2; a.err=''; render();
 }
-function fiShow(){const a=ui.auth;if($('fotp')!==a.otp)return authErr('Wrong code. Please try again.');a.otpShown=true;a.err='';render();}
+function fiShow(){const a=ui.auth;if($('fotp')!==a.otp)return authErr('Wrong code. Please try again.',['fotp']);a.otpShown=true;a.err='';render();}
 function authView(){
   const a=ui.auth||(ui.auth={view:'landing',step:1});
   const back=`<button class="s" style="width:100%;margin-top:8px" onclick="authGo('landing')">Back</button>`;
@@ -728,8 +744,8 @@ function authView(){
       body=`<div class="card"><h2 style="margin-top:0">Sign Up With Email</h2>${errBox}
         <label>Full Name</label><input id="sn" value="${esc(a.name||'')}">
         <label>Google Account Email</label><input id="sid" type="email" placeholder="you@gmail.com">
-        <label>Create Password (6+ characters)</label><input id="spw" type="password">
-        <label>Confirm Password</label><input id="spw2" type="password">
+        <label>Create Password (8 to 14 characters)</label><input id="spw" type="password" maxlength="14">
+        <label>Confirm Password</label><input id="spw2" type="password" maxlength="14">
         <button class="p" onclick="createGoogleAccount()">Create Account</button>
         <div class="muted" style="margin-top:8px">We will email a verification link to this address.</div>
         <button class="s" style="width:100%;margin-top:8px" onclick="ui.auth.method=null;render()">Change Sign Up Method</button>${back}</div>`;
@@ -737,7 +753,7 @@ function authView(){
       let inner='';
       if(a.step===1) inner=`<label>Full Name</label><input id="sn" value="${esc(a.name||'')}"><label>Mobile Number</label><input id="sid" inputmode="numeric" maxlength="10" value="${esc(a.idv||'')}" placeholder="10-digit mobile"><button class="p" onclick="sendSignupCode()">Send Verification Code</button>`;
       else if(a.step===2) inner=`<div class="muted">Enter the code sent to ${maskMobile(normMobile(a.idv))}</div>${demoCode(a.otp)}<label>Verification Code</label><input id="sotp" inputmode="numeric" maxlength="6"><button class="p" onclick="verifySignupCode()">Verify</button>`;
-      else inner=`<label>Create Password (6+ characters)</label><input id="spw" type="password"><label>Confirm Password</label><input id="spw2" type="password"><button class="p" onclick="createAccount()">Create Account</button>`;
+      else inner=`<label>Create Password (8 to 14 characters)</label><input id="spw" type="password" maxlength="14"><label>Confirm Password</label><input id="spw2" type="password" maxlength="14"><button class="p" onclick="createAccount()">Create Account</button>`;
       body=`<div class="card"><h2 style="margin-top:0">Sign Up With Mobile</h2>${errBox}${inner}<button class="s" style="width:100%;margin-top:8px" onclick="ui.auth.method=null;render()">Change Sign Up Method</button>${back}</div>`;
     }
   }
@@ -753,7 +769,7 @@ function authView(){
   else if(a.view==='forgotPass'){
     body=`<div class="card"><h2 style="margin-top:0">Forgot Password</h2>${errBox}`+(a.step===1?
       `<label>Google Account Email Or Mobile Number</label><input id="fid" placeholder="email or mobile"><button class="p" onclick="fpSend()">Send Reset</button><div class="muted" style="margin-top:8px">Email accounts receive a reset link. Mobile accounts receive a code.</div>`:
-      `<div class="muted">Enter the code sent to your registered contact.</div>${demoCode(a.otp)}<label>Verification Code</label><input id="fotp" inputmode="numeric" maxlength="6"><label>New Password (6+ characters)</label><input id="fpw" type="password"><label>Confirm New Password</label><input id="fpw2" type="password"><button class="p" onclick="fpReset()">Reset Password</button>`)+`${back}</div>`;
+      `<div class="muted">Enter the code sent to your registered contact.</div>${demoCode(a.otp)}<label>Verification Code</label><input id="fotp" inputmode="numeric" maxlength="6"><label>New Password (8 to 14 characters)</label><input id="fpw" type="password" maxlength="14"><label>Confirm New Password</label><input id="fpw2" type="password" maxlength="14"><button class="p" onclick="fpReset()">Reset Password</button>`)+`${back}</div>`;
   }
   else if(a.view==='forgotId'){
     const found=a.step===2&&a.target?users.find(x=>x.id===a.target):null;
@@ -772,7 +788,8 @@ function renderAuth(){
   window.scrollTo(0,0);
 }
 function go(t){ui.tab=t;ui.tenant=null;ui.edit=null;render();}
-function render(){
+function render(){_render();applyKeep();}
+function _render(){
   applyTheme();
   if(!session)return renderAuth();
   const hdrOut=document.getElementById('hdrOut'); if(hdrOut)hdrOut.style.display='';
@@ -1139,7 +1156,7 @@ function props(){
 }
 function addProp(){
   const name=$('pn');
-  if(!name)return fail('Property name is required.');
+  if(!name)return fail('Property name is required.',['pn']);
   const p={id:uid(),name,address:$('pa')};
   db.properties.push(p); ui.prop=p.id; save(); flash('Property added.'); render();
 }
@@ -1148,32 +1165,32 @@ function editProp(id,nm,ad){
   const p=db.properties.find(x=>x.id===id);
   if(!p)return fail('Property not found.');
 
-  if(!nm.trim())return fail('Name cannot be empty.');
+  if(!nm.trim())return fail('Name cannot be empty.',['ed_name']);
 
   p.name=nm.trim(); if(ad!==null)p.address=ad.trim();
-  save(); flash('Property updated.'); render();
+  ui.edit=null; save(); flash('Property updated.'); render();
 }
 function editBlock(old,nn){
   const p=curProp();
 
   const n=nn.trim();
-  if(!n)return fail('Property name cannot be empty.');
-  if(n===old){render();return;}
-  if(propBlocks(p).includes(n))return fail('That property name already exists.');
+  if(!n)return fail('Property name cannot be empty.',['ed_name']);
+  if(n===old){ui.edit=null;render();return;}
+  if(propBlocks(p).includes(n))return fail('That property name already exists.',['ed_name']);
   db.beds.forEach(b=>{if(b.propId===p.id&&(b.block||'')===old)b.block=n;});
   db.blocks.forEach(x=>{if(x.propId===p.id&&x.name===old)x.name=n;});
   if(!db.blocks.some(x=>x.propId===p.id&&x.name===n))db.blocks.push({id:uid(),propId:p.id,name:n});
-  save(); flash('Property name renamed.'); render();
+  ui.edit=null; save(); flash('Property name renamed.'); render();
 }
 function editRoom(block,room,nr){
   const p=curProp();
 
   const n=nr.trim();
-  if(!n)return fail('Room number cannot be empty.');
-  if(n===room){render();return;}
-  if(propBeds(p).some(b=>bkey(b)===block+'|'+n))return fail('That room already exists under this property name.');
+  if(!n)return fail('Room number cannot be empty.',['ed_name']);
+  if(n===room){ui.edit=null;render();return;}
+  if(propBeds(p).some(b=>bkey(b)===block+'|'+n))return fail('That room already exists under this property name.',['ed_name']);
   db.beds.forEach(b=>{if(b.propId===p.id&&(b.block||'')===block&&b.room===room)b.room=n;});
-  save(); flash('Room renamed.'); render();
+  ui.edit=null; save(); flash('Room renamed.'); render();
 }
 function startEdit(kind,a,b){
   if(kind==='prop'){const p=db.properties.find(x=>x.id===a);if(!p)return fail('Property not found.');ui.edit={kind,a,name:p.name,addr:p.address||''};}
@@ -1187,7 +1204,6 @@ function saveEdit(){
   const nm=document.getElementById('ed_name').value.trim();
   const ea=document.getElementById('ed_addr');
   const ad=ea?ea.value.trim():'';
-  ui.edit=null;
   if(e.kind==='prop')editProp(e.a,nm,ad);
   else if(e.kind==='block')editBlock(e.a,nm);
   else editRoom(e.a,e.b,nm);
@@ -1206,8 +1222,8 @@ function addBlock(){
   const p=curProp();
   const name=$('nbk');
   if(!p)return fail('Add a property first.');
-  if(!name)return fail('Property name is required.');
-  if(propBlocks(p).includes(name))return fail('That property name already exists.');
+  if(!name)return fail('Property name is required.',['nbk']);
+  if(propBlocks(p).includes(name))return fail('That property name already exists.',['nbk']);
   db.blocks.push({id:uid(),propId:p.id,name}); save(); flash('Property name "'+name+'" added.'); render();
 }
 function delBlock(name){
@@ -1219,13 +1235,13 @@ function addRoom(){
   const p=curProp();
   if(!p)return fail('Add a property first.');
   const p2=db.properties.find(x=>x.id===document.getElementById('rprop')?.value);
-  if(!p2)return fail('Select a property first.');
+  if(!p2)return fail('Select a property first.',['rprop']);
   const block='';
   const room=$('rn'), n=Number($('rb')), rent=Number($('rr'));
-  if(!room)return fail('Room number is required.');
-  if(!(Number.isInteger(n)&&n>=1&&n<=5))return fail('Number of beds must be between 1 and 5 (beds are named A to E).');
-  if(!(rent>0))return fail('Rent per bed must be above 0.');
-  if(propBeds(p2).some(b=>bkey(b)===block+'|'+room))return fail('That room already exists under this property name.');
+  if(!room)return fail('Room number is required.',['rn']);
+  if(!(Number.isInteger(n)&&n>=1&&n<=5))return fail('Number of beds must be between 1 and 5 (beds are named A to E).',['rb']);
+  if(!(rent>0))return fail('Rent per bed must be above 0.',['rr']);
+  if(propBeds(p2).some(b=>bkey(b)===block+'|'+room))return fail('That room already exists under this property name.',['rn']);
   for(let i=1;i<=n;i++)db.beds.push({id:uid(),propId:p2.id,block,room,bed:String.fromCharCode(64+i),rent});
   ui.prop=p2.id; save(); flash(`Room ${room} added to ${p2.name} with ${n} bed(s).`); render();
 }
@@ -1266,7 +1282,7 @@ function saveBedRent(id){
   const b=db.beds.find(x=>x.id===id);
   if(!b)return fail('Bed not found.');
   const v=Number(document.getElementById('bre_'+id)?.value);
-  if(!(v>0))return fail('Rent must be above 0.');
+  if(!(v>0))return fail('Rent must be above 0.',['bre_'+id]);
   b.rent=v; ui.bedEdit=null; save(); flash('Bed rent updated to '+money(v)+'. Tenant rents are set separately on each tenant.'); render();
 }
 
@@ -1345,14 +1361,14 @@ function openMapBooked(tid){ui.tab='active';ui.tenant=tid;render();}
 function allot(){
   const errs=[];
   const bedId=$('tb');
-  if(!$('tn'))errs.push('Name is required.');
-  if(!/^\d{10}$/.test($('tm')))errs.push('Mobile must be 10 digits.');
-  if(!$('tc'))errs.push('Check-in date is required.');
-  if(!(Number($('tr'))>0))errs.push('Rent must be above 0.');
+  if(!$('tn'))errs.push(['Name is required.','tn']);
+  if(!/^\d{10}$/.test($('tm')))errs.push(['Mobile must be 10 digits.','tm']);
+  if(!$('tc'))errs.push(['Check-in date is required.','tc']);
+  if(!(Number($('tr'))>0))errs.push(['Rent must be above 0.','tr']);
   const day=Number($('tbd'));
-  if(!(Number.isInteger(day)&&day>=1&&day<=28))errs.push('Rent due day must be between 1 and 28.');
-  if(!bedId||activeOf(bedId))errs.push('Choose a vacant bed.');
-  if(errs.length)return fail(errs.join(' '));
+  if(!(Number.isInteger(day)&&day>=1&&day<=28))errs.push(['Rent due day must be between 1 and 28.','tbd']);
+  if(!bedId||activeOf(bedId))errs.push(['Choose a vacant bed.','tb']);
+  if(errs.length)return failMany(errs);
   const t={id:uid(),bedId,name:$('tn'),mobile:$('tm'),altContact:$('ta'),emergency:$('te'),
     checkin:$('tc'),noticeDays:Number($('tnp'))||0,rent:Number($('tr')),billDay:day,
     depositAmt:Number($('tds'))||0,depositPaid:Number($('tdp'))||0,
@@ -1448,8 +1464,8 @@ function tenantDetail(){
 function checkout(id){
   const t=db.tenants.find(x=>x.id===id);
   const ded=Number($('cdd'))||0;
-  if(!$('cod'))return fail('Checkout date is required.');
-  if(ded<0||ded>t.depositPaid)return fail('Deduction must be between 0 and the deposit paid.');
+  if(!$('cod'))return fail('Checkout date is required.',['cod']);
+  if(ded<0||ded>t.depositPaid)return fail('Deduction must be between 0 and the deposit paid.',['cdd']);
   t.checkout=$('cod'); t.deductions=ded; t.deductReason=$('cdr'); t.refund=t.depositPaid-ded;
   save(); flash('Tenant checked out. Bed is now vacant.'); render();
 }
@@ -1489,12 +1505,12 @@ function saveTenantEdit(id){
   const name=g('te_name'), mobile=g('te_mob'), ci=g('te_ci');
   const rent=Number(g('te_rent')), day=Number(g('te_day'));
   const errs=[];
-  if(!name)errs.push('Name is required.');
-  if(!/^\d{10}$/.test(mobile))errs.push('Mobile must be 10 digits.');
-  if(!ci)errs.push('Check-in date is required.');
-  if(!(rent>0))errs.push('Rent must be above 0.');
-  if(!(Number.isInteger(day)&&day>=1&&day<=28))errs.push('Rent due day must be between 1 and 28.');
-  if(errs.length)return fail(errs.join(' '));
+  if(!name)errs.push(['Name is required.','te_name']);
+  if(!/^\d{10}$/.test(mobile))errs.push(['Mobile must be 10 digits.','te_mob']);
+  if(!ci)errs.push(['Check-in date is required.','te_ci']);
+  if(!(rent>0))errs.push(['Rent must be above 0.','te_rent']);
+  if(!(Number.isInteger(day)&&day>=1&&day<=28))errs.push(['Rent due day must be between 1 and 28.','te_day']);
+  if(errs.length)return failMany(errs);
   Object.assign(t,{name,mobile,altContact:g('te_alt'),emergency:g('te_emg'),checkin:ci,
     noticeDays:Number(g('te_np'))||0,rent,billDay:day,
     depositAmt:Number(g('te_dep'))||0,depositPaid:Number(g('te_dpd'))||0,
@@ -1521,7 +1537,7 @@ function addExp(){
   const p=curProp();
   if(!p)return fail('Add a property first.');
   const amt=Number($('ea'));
-  if(!(amt>0))return fail('Amount must be above 0.');
+  if(!(amt>0))return fail('Amount must be above 0.',['ea']);
   db.expenses.push({id:uid(),propId:p.id,category:$('ec'),date:$('ed')||ymd(new Date()),amount:amt,notes:$('en'),recurring:document.getElementById('er').checked});
   save(); flash('Expense saved.'); render();
 }
