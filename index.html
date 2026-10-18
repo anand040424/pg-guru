@@ -1052,7 +1052,7 @@ function setDash(){ui.prop=$('dprop');ui.month=$('dmonth')||ui.month;render();}
 function props(){
   const allBeds=db.beds.length, allOcc=db.beds.filter(b=>activeOf(b.id)).length;
   let html=editorHTML()+`<div class="tiles"><div class="tile"><span class="tile-ic">🏢</span><div><div class="muted">Properties</div><div class="tile-v">${db.properties.length}</div></div></div><div class="tile"><span class="tile-ic">🚪</span><div><div class="muted">Beds</div><div class="tile-v">${allBeds}</div></div></div><div class="tile"><span class="tile-ic">✅</span><div><div class="muted">Occupied</div><div class="tile-v">${allOcc}</div></div></div></div><div class="card"><h2 style="margin-top:0">Properties</h2>
-  ${db.properties.map(x=>`<div class="row" style="margin:6px 0"><button class="s" onclick="pick('${x.id}')">${esc(x.name)}</button><span class="muted">${esc(x.address)}</span> <button class="s" onclick="startEdit('prop','${x.id}')">Edit</button></div>`).join('')||'<div class="muted">None Yet.</div>'}
+  ${db.properties.map(x=>`<div class="row" style="margin:6px 0"><button class="s" onclick="pick('${x.id}')">${esc(x.name)}</button><span class="muted">${esc(x.address)}</span> <button class="s" onclick="startEdit('prop','${x.id}')">Edit</button> <button class="s d" onclick="delProp('${x.id}')">Delete</button></div>`).join('')||'<div class="muted">None Yet.</div>'}
   <label>New Property Name</label><input id="pn"><button class="s" onclick="voice('pn')">🎙 Speak</button>
   <label>Address</label><input id="pa"><button class="s" onclick="voice('pa')">🎙 Speak</button>
   <button class="p" onclick="addProp()">Add Property</button></div>`;
@@ -1062,7 +1062,7 @@ function props(){
   const rooms=[...new Set(beds.map(b=>bkey(b)))];
   html+=`<div class="card"><h2 style="margin-top:0">Rooms in ${esc(p.name)}</h2>
   ${rooms.map(r=>`<div style="margin-bottom:10px"><div class="row"><b>${r.split('|')[0]?esc(r.split('|')[0])+' · ':''}Room ${esc(r.split('|')[1])}</b><button class="s" onclick="startEdit('room','${jsa(r.split('|')[0])}','${jsa(r.split('|')[1])}')">Edit</button> <button class="s d" onclick="delRoom('${jsa(r.split('|')[0])}','${jsa(r.split('|')[1])}')">Remove Room</button></div>
-    ${beds.filter(b=>bkey(b)===r).map(b=>{const t=activeOf(b.id);return `<div class="row" style="margin:6px 0"><span>Bed ${esc(b.room)}${esc(b.bed)} · ${money(b.rent)}/mo</span>${t?`<span class="tag">${esc(t.name)}</span>`:'<span class="tag ok">Vacant</span>'}</div>`;}).join('')}
+    ${beds.filter(b=>bkey(b)===r).map(b=>{const t=activeOf(b.id);return `<div class="row" style="margin:6px 0"><span>Bed ${esc(b.room)}${esc(b.bed)} · ${money(b.rent)}/mo</span>${ui.bedEdit===b.id?`<span class="row" style="gap:6px;justify-content:flex-end"><input id="bre_${b.id}" type="number" min="1" value="${esc(b.rent)}" style="width:110px"><button class="s" onclick="saveBedRent('${b.id}')">Save</button><button class="s" onclick="cancelBedEdit()">Cancel</button></span>`:`${t?`<span class="tag">${esc(t.name)}</span>`:'<span class="tag ok">Vacant</span>'} <button class="s" onclick="startBedEdit('${b.id}')">Edit Rent</button>`}</div>`;}).join('')}
   </div>`).join('')||'<div class="muted">No Rooms Yet.</div>'}
   <h2>Add Room</h2>
   <label>Select Property</label>
@@ -1167,9 +1167,43 @@ function addRoom(){
 }
 function delRoom(block,room){
   const p=curProp();
+  if(!p)return fail('Property not found.');
   const ids=propBeds(p).filter(b=>bkey(b)===block+'|'+room).map(b=>b.id);
-  if(ids.some(id=>db.tenants.some(t=>t.bedId===id)))return fail('This room has tenant history, so it cannot be removed.');
-  db.beds=db.beds.filter(b=>!ids.includes(b.id)); save(); flash('Room removed.'); render();
+  if(!ids.length)return fail('Room not found.');
+  if(!armed('rm|'+block+'|'+room))return;
+  const n=removeBedsCascade(ids);
+  save(); flash('Room '+room+' removed'+(n?' along with '+n+' tenant record(s).':'.')); render();
+}
+/* Removes beds plus any tenants in them and those tenants' payments. Returns tenant count removed. */
+function removeBedsCascade(bedIds){
+  const tIds=new Set(db.tenants.filter(t=>bedIds.includes(t.bedId)).map(t=>t.id));
+  db.payments=db.payments.filter(p=>!tIds.has(p.tenantId));
+  db.tenants=db.tenants.filter(t=>!tIds.has(t.id));
+  db.beds=db.beds.filter(b=>!bedIds.includes(b.id));
+  if(ui.tenant&&tIds.has(ui.tenant))ui.tenant=null;
+  if(ui.tedit&&tIds.has(ui.tedit))ui.tedit=null;
+  return tIds.size;
+}
+function delProp(id){
+  const p=db.properties.find(x=>x.id===id);
+  if(!p)return fail('Property not found.');
+  if(!armed('pp|'+id))return;
+  const n=removeBedsCascade(propBeds(p).map(b=>b.id));
+  db.blocks=db.blocks.filter(x=>x.propId!==id);
+  db.expenses=db.expenses.filter(e=>e.propId!==id);
+  db.properties=db.properties.filter(x=>x.id!==id);
+  if(ui.prop===id)ui.prop=null;
+  if(ui.edit&&ui.edit.a===id)ui.edit=null;
+  save(); flash('Property "'+p.name+'" deleted'+(n?' along with '+n+' tenant record(s).':'.')); render();
+}
+function startBedEdit(id){ui.bedEdit=id;render();}
+function cancelBedEdit(){ui.bedEdit=null;render();}
+function saveBedRent(id){
+  const b=db.beds.find(x=>x.id===id);
+  if(!b)return fail('Bed not found.');
+  const v=Number(document.getElementById('bre_'+id)?.value);
+  if(!(v>0))return fail('Rent must be above 0.');
+  b.rent=v; ui.bedEdit=null; save(); flash('Bed rent updated to '+money(v)+'. Tenant rents are set separately on each tenant.'); render();
 }
 
 /* ---------- Tenants ---------- */
@@ -1333,6 +1367,7 @@ function tenantDetail(){
     <div class="muted">Expected ${money(d.expected)} · Received ${money(d.paid)}</div>
     ${d.due>0&&t.mobile?`<a class="s" target="_blank" href="${waLink(t.mobile,duesMessage(t))}">Send WhatsApp Reminder</a>`:''}
   </div>
+  ${ui.tedit===t.id?tEditHTML(t):`<button class="s" onclick="openTEdit('${t.id}')">Edit Tenant Details</button>`}
   <div class="card"><h2 style="margin-top:0">Rent Status</h2>
   ${rentRows(t)}</div>
   ${t.checkout?`<div class="card">Checked out ${esc(t.checkout)} · Refund ${money(t.refund)}${t.deductions?` · Deducted ${money(t.deductions)} (${esc(t.deductReason)})`:''}</div>`:`
@@ -1359,6 +1394,48 @@ function delT(id){
   db.tenants=db.tenants.filter(t=>t.id!==id);
   db.payments=db.payments.filter(p=>p.tenantId!==id);
   ui.tenant=null; save(); flash('Tenant deleted.'); render();
+}
+
+function openTEdit(id){ui.tedit=id;render();}
+function cancelTEdit(){ui.tedit=null;render();}
+function tEditHTML(t){
+  const f=(id,label,val,type='text',extra='')=>`<label>${label}</label><input id="${id}" type="${type}" value="${esc(val??'')}" ${extra}>`;
+  const idOpts=['Aadhaar','PAN','Driving Licence','Passport','Other','None'].map(o=>`<option ${o===t.idType?'selected':''}>${o}</option>`).join('');
+  return `<div class="card" style="border-color:var(--acc)"><h2 style="margin-top:0">Edit Tenant Details</h2>
+  ${f('te_name','Full name *',t.name)}
+  ${f('te_mob','Mobile number (10 digits) *',t.mobile,'text','inputmode="numeric" maxlength="10"')}
+  ${f('te_alt','Alternate contact',t.altContact,'text','inputmode="numeric"')}
+  ${f('te_emg','Emergency contact',t.emergency)}
+  ${f('te_ci','Check-in date *',t.checkin,'date')}
+  ${f('te_np','Notice period (days)',t.noticeDays,'number','min="0"')}
+  ${f('te_rent','Rent per month (₹) *',t.rent,'number','min="1"')}
+  <div class="muted">Changing rent applies to every month of this tenancy, including past months.</div>
+  ${f('te_day','Rent due day of month (1 to 28)',t.billDay,'number','min="1" max="28"')}
+  ${f('te_dep','Security deposit (₹)',t.depositAmt,'number','min="0"')}
+  ${f('te_dpd','Deposit paid so far (₹)',t.depositPaid,'number','min="0"')}
+  <label>ID type</label><select id="te_it">${idOpts}</select>
+  ${f('te_id','ID number',t.idNo)}
+  <button class="p" onclick="saveTenantEdit('${t.id}')">Save Changes</button>
+  <button class="s" onclick="cancelTEdit()">Cancel</button></div>`;
+}
+function saveTenantEdit(id){
+  const t=db.tenants.find(x=>x.id===id);
+  if(!t)return fail('Tenant not found.');
+  const g=k=>{const el=document.getElementById(k);return el?el.value.trim():'';};
+  const name=g('te_name'), mobile=g('te_mob'), ci=g('te_ci');
+  const rent=Number(g('te_rent')), day=Number(g('te_day'));
+  const errs=[];
+  if(!name)errs.push('Name is required.');
+  if(!/^\d{10}$/.test(mobile))errs.push('Mobile must be 10 digits.');
+  if(!ci)errs.push('Check-in date is required.');
+  if(!(rent>0))errs.push('Rent must be above 0.');
+  if(!(Number.isInteger(day)&&day>=1&&day<=28))errs.push('Rent due day must be between 1 and 28.');
+  if(errs.length)return fail(errs.join(' '));
+  Object.assign(t,{name,mobile,altContact:g('te_alt'),emergency:g('te_emg'),checkin:ci,
+    noticeDays:Number(g('te_np'))||0,rent,billDay:day,
+    depositAmt:Number(g('te_dep'))||0,depositPaid:Number(g('te_dpd'))||0,
+    idType:g('te_it'),idNo:g('te_id')});
+  ui.tedit=null; save(); flash('Tenant details updated.'); render();
 }
 
 /* ---------- Expenses ---------- */
