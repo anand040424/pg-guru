@@ -344,6 +344,7 @@ nav button.on .ti{transform:translateY(-1px)}
 /* Sign Out button in the top right of the title bar */
 .hdr-out{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;background:rgba(255,255,255,.22);color:inherit;border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;z-index:2}
 header h1{padding-right:90px}
+
 </style>
 </head>
 <body>
@@ -856,6 +857,77 @@ function opexDonut(scope,m){
   const legend=cats.map((c,i)=>`<div class="lg"><i style="background:${palette[i%palette.length]}"></i>${esc(c[0])}<b>${money(c[1])}</b></div>`).join('')||'<div class="muted">No Opex recorded for this month.</div>';
   return `<h2>Opex By Category</h2><div class="card donut-wrap"><svg viewBox="0 0 140 140" width="130" height="130"><circle r="${R}" cx="70" cy="70" fill="none" stroke="var(--line)" stroke-width="20"/>${segs}<text x="70" y="66" text-anchor="middle" font-size="11" fill="currentColor" opacity=".7">Total</text><text x="70" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">${money(total)}</text></svg><div class="lgs">${legend}</div></div>`;
 }
+function makeSample(){
+  const now=new Date(), cy=now.getFullYear(), cm=now.getMonth();
+  const mk=n=>{const d=new Date(cy,cm-n,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
+  const FIRST=['Anand','Ravi','Murugan','Karthik','Suresh','Ganesh','Prakash','Arun','Vignesh','Senthil','Kumar','Mohan','Selvam','Dinesh','Saravanan','Bala','Hari','Ramesh','Vijay','Naveen','Priya','Lakshmi','Meena','Kavitha','Divya','Anitha','Revathi','Sangeetha','Deepa','Nandhini','Padma','Shanthi','Sowmya','Kiran','Rahul','Amit','Vikram','Rohit','Sanjay','Ajay','Pooja','Sneha','Shreya','Aishwarya','Keerthana','Geetha','Vasanth','Jayaraman','Venkatesh','Mani','Sekar','Raja','Sathish','Yuvaraj','Bharathi','Swathi','Abinaya','Gowri','Iniyan','Kalai','Muthu','Pandian','Thilaga','Vasu','Ilango','Ponni','Ravindran','Sivakumar','Tamilarasi','Velan','Yamini','Nithya'];
+  const SUR=['Kumar','Selvam','Raja','Murugan','Sundaram','Krishnan','Rao','Iyer','Nair','Reddy'];
+  const MODES=['Cash','UPI','Bank Transfer'];
+  const PROPS=[['AJ Gents PG Hostel','Kallakurichi, Tamil Nadu'],['AJ Ladies Hostel','Kallakurichi, Tamil Nadu'],['Anna Nagar PG','Anna Nagar, Chennai'],['Velachery Men PG','Velachery, Chennai']];
+  const beds=[],tenants=[],payments=[],expenses=[],properties=[];
+  const mobile=i=>'9'+String(100000000+((i*7919)%899999999)).slice(0,9);
+  PROPS.forEach((pr,pi)=>{
+    const p={id:'pz'+pi,name:pr[0],address:pr[1]};
+    properties.push(p);
+    ['A','B'].forEach((bk,bi)=>{
+      [1,2,3].forEach(r=>{
+        const room=String((bi+1)*100+(pi*3+r)); // e.g. 101..112, 201..212
+        const count=[2,3,4][(r+bi+pi)%3];
+        const rent=4500+((pi*3+bi+r)%5)*1000;
+        for(let j=0;j<count;j++)beds.push({id:'bz'+beds.length,propId:p.id,block:'Block '+bk,room,bed:String.fromCharCode(65+j),rent});
+      });
+    });
+  });
+  const addPay=(tid,k,j,mo,amt,day)=>{if(amt>0)payments.push({id:'pz'+k+'_'+j,tenantId:tid,amount:amt,date:mo+'-'+String(day||5).padStart(2,'0'),mode:MODES[k%3],forMonth:mo});};
+  // Active tenants: 52 beds, 8 payment scenarios cycling
+  for(let k=0;k<52;k++){
+    const bed=beds[k];
+    const n=k%8===6?0:1+(k%9);
+    const t={id:'tz'+k,bedId:bed.id,name:FIRST[k]+' '+SUR[k%10],mobile:mobile(k),altContact:'',emergency:mobile(k+500),
+      checkin:mk(n)+'-'+String(n===0?1:1+(k%9)).padStart(2,'0'),noticeDays:30,rent:bed.rent,billDay:1,
+      depositAmt:bed.rent,depositPaid:k%8===6?2000:bed.rent,idType:['Aadhaar','PAN','Driving licence'][k%3],idNo:'',checkout:null,refund:0,deductions:0,deductReason:''};
+    tenants.push(t);
+    const months=billMonths(t); const L=months.length; const rent=t.rent;
+    const paid=months.map(()=>rent);
+    const s=k%8;
+    if(s===1&&L>0)paid[L-1]=0;                       // current month unpaid
+    if(s===2)for(let q=Math.max(0,L-3);q<L;q++)paid[q]=0; // last three months unpaid
+    if(s===3&&L>0)paid[L-1]=Math.round(rent/2);     // current month partly paid
+    if(s===4){if(L>=3)paid[L-3]=Math.round(rent/3);if(L>=2){paid[L-2]=0;}if(L>=1)paid[L-1]=0;} // past partial + two unpaid
+    if(s===6)for(let q=0;q<L;q++)paid[q]=0;          // joined this month, nothing paid
+    if(s===7&&L>2)paid[Math.floor(L/2)]=0;           // one middle month missed
+    months.forEach((mo,j)=>addPay(t.id,k,j,mo,paid[j]));
+    if(s===5&&L>0)payments.push({id:'pz'+k+'_adv',tenantId:t.id,amount:1000,date:months[L-1]+'-06',mode:MODES[k%3],forMonth:months[L-1]});
+  }
+  // Checked-out tenants: 4 records with deposit deduction and refund
+  for(let c=0;c<4;c++){
+    const k=52+c, bed=beds[60+c];
+    const ded=c%2?750:0;
+    const t={id:'tz'+k,bedId:bed.id,name:FIRST[k]+' '+SUR[k%10],mobile:mobile(k),altContact:'',emergency:mobile(k+500),
+      checkin:mk(6)+'-03',noticeDays:30,rent:bed.rent,billDay:1,depositAmt:5000,depositPaid:5000,idType:'Aadhaar',idNo:'',
+      checkout:mk(2)+'-15',refund:5000-ded,deductions:ded,deductReason:ded?'Wall damage':''};
+    tenants.push(t);
+    billMonths(t).forEach((mo,j)=>addPay(t.id,k,j,mo,t.rent));
+  }
+  // Operating expenses per property
+  properties.forEach((p,pi)=>{
+    expenses.push({id:'ex'+pi+'e',propId:p.id,category:'Electricity',date:mk(9)+'-01',amount:3000+pi*400,recurring:true,notes:'Monthly EB bill'});
+    expenses.push({id:'ex'+pi+'w',propId:p.id,category:'Wi-Fi',date:mk(9)+'-01',amount:900,recurring:true,notes:'Broadband'});
+    expenses.push({id:'ex'+pi+'wa',propId:p.id,category:'Water',date:mk(9)+'-01',amount:700,recurring:true,notes:'Water tanker'});
+    [1,3,5].forEach((n,q)=>expenses.push({id:'ex'+pi+'c'+q,propId:p.id,category:'Cleaning',date:mk(n)+'-10',amount:1500,recurring:false,notes:'Monthly cleaning'}));
+    expenses.push({id:'ex'+pi+'el',propId:p.id,category:'Electrician',date:mk(2)+'-15',amount:800+pi*100,recurring:false,notes:'Wiring repair'});
+    expenses.push({id:'ex'+pi+'m',propId:p.id,category:'Maintenance',date:mk(4)+'-20',amount:2500,recurring:false,notes:'Plumbing'});
+    expenses.push({id:'ex'+pi+'x',propId:p.id,category:'Miscellaneous',date:mk(0)+'-03',amount:600,recurring:false,notes:'Stationery and sundries'});
+  });
+  return {properties,blocks:[],beds,tenants,payments,expenses};
+}
+function loadSample(){
+  if(!armed('sample'))return;
+  const s=makeSample();
+  db=Object.assign(JSON.parse(JSON.stringify(EMPTY)),s,{settings:db.settings});
+  ui.prop='ALL'; ui.tenant=null; save();
+  flash('Sample data loaded: '+db.tenants.length+' tenant records across '+db.properties.length+' properties.'); render();
+}
 function setMonthProp(id){ui.prop=id;render();}
 function setDashView(v){ui.dashView=v;render();}
 function dashMonth(p,m){
@@ -1343,6 +1415,7 @@ function backup(){
     <button class="s" onclick="setQr()">Save QR Link</button>
     <div class="muted">Paste a public link to your Google Pay QR image. It is added to every dues message.</div>
   </div>
+  <div class="card"><h2 style="margin-top:0">Sample Data</h2><div class="muted">Loads test tenants, rooms, rent, and dues across 4 properties. This replaces the current data. Tap twice to confirm.</div><button class="s" onclick="loadSample()">Load Sample Data</button></div>
   <div class="card"><h2 style="margin-top:0">Erase Data</h2>
     ${ui.wipe?`<label>${db.settings.pass?'Enter Passcode':'Set A 6-Digit Passcode'}</label>
       <input id="wpc" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6 digits">
