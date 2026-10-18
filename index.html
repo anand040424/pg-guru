@@ -340,10 +340,14 @@ nav button.on .ti{transform:translateY(-1px)}
 .land-h{font-size:26px;font-weight:800;letter-spacing:-.03em;margin:6px 0 6px;line-height:1.15}
 .demo-code{background:color-mix(in srgb,var(--acc) 10%,var(--card));border:1px dashed var(--acc);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
 .demo-code b{font-size:18px;letter-spacing:.2em}
+
+/* Sign Out button in the top right of the title bar */
+.hdr-out{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:12px;background:rgba(255,255,255,.22);color:inherit;border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;z-index:2}
+header h1{padding-right:90px}
 </style>
 </head>
 <body>
-<div id="top"><header><h1>PG Guru</h1><div class="sub">Property Details · Tenants · Rent · Opex</div></header>
+<div id="top"><header><h1>PG Guru</h1><div class="sub">Property Details · Tenants · Rent · Opex</div><button id="hdrOut" class="hdr-out" onclick="signOut()" style="display:none">Sign Out</button></header>
 </div><nav id="nav"></nav>
 <main id="app"></main>
 <script>
@@ -697,6 +701,7 @@ function authView(){
 }
 function renderAuth(){
   const m0=ui.msg,b0=ui.bad; ui.msg='';
+  const hdrOut=document.getElementById('hdrOut'); if(hdrOut)hdrOut.style.display='none';
   document.getElementById('nav').innerHTML='';
   document.getElementById('app').innerHTML=(m0?`<div class="msg ${b0?'bad':'ok'}">${esc(m0)}</div>`:'')+authView();
   window.scrollTo(0,0);
@@ -705,6 +710,7 @@ function go(t){ui.tab=t;ui.tenant=null;ui.edit=null;render();}
 function render(){
   applyTheme();
   if(!session)return renderAuth();
+  const hdrOut=document.getElementById('hdrOut'); if(hdrOut)hdrOut.style.display='';
   const m=ui.msg, bad=ui.bad; ui.msg='';
   document.getElementById('nav').innerHTML=[['dash','Dashboard'],['map','Bed Map'],['tenants','Tenant Registration'],['active','Active Tenants'],['props','Property Details'],['exp','Opex'],['backup','Backup']]
     .map(([k,l])=>`<button class="${ui.tab===k?'on':''}" onclick="go('${k}')"><span class="ti">${TAB_ICON[k]||''}</span>${l}</button>`).join('');
