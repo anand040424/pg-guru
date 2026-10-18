@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PG Guru</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6fb;--card:#ffffff;--ink:#0f172a;--muted:#64748b;--acc:#4f46e5;--acc2:#7c3aed;--ok:#059669;--bad:#dc2626;--line:#e2e8f0;--shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.06);color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme=light]){--bg:#0b1020;--card:#131a2e;--ink:#e6ebf5;--muted:#8b97b0;--line:#222c45;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-font-smoothing:antialiased;line-height:1.45}
+#top{position:sticky;top:0;z-index:5;background:var(--bg);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px)}
+header{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 55%,#4338ca 100%);color:#fff;padding:14px 18px 16px;padding-top:calc(14px + env(safe-area-inset-top,0px));box-shadow:0 8px 24px rgba(30,27,75,.25)}
+header h1{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em}
+header .sub{font-size:12px;opacity:.75;margin-top:2px}
+nav{display:flex;gap:6px;padding:10px 12px;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{flex:0 0 auto;padding:8px 14px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-size:13.5px;font-weight:500;white-space:nowrap;cursor:pointer;transition:all .15s}
+nav button:hover{color:var(--ink);background:var(--bg)}
+nav button.on{background:var(--acc);color:#fff;font-weight:600;box-shadow:0 4px 12px rgba(79,70,229,.35)}
+main{padding:16px 14px 40px;max-width:680px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:22px 2px 10px;font-weight:700}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin:12px 2px 6px}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:12px;font-size:16px;background:var(--card);color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s;font-family:inherit}
+input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 4px rgba(79,70,229,.15)}
+input[type=checkbox]{width:auto}
+button{font-family:inherit}
+button.p{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:0;border-radius:12px;padding:13px 16px;font-size:15px;font-weight:600;margin-top:14px;width:100%;box-shadow:0 6px 16px rgba(79,70,229,.3);cursor:pointer}
+button.p.d{background:linear-gradient(135deg,#ef4444,#dc2626);box-shadow:0 6px 16px rgba(220,38,38,.25)}
+button.s,a.s{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:7px 12px;font-size:13px;font-weight:500;margin:4px 6px 0 0;display:inline-block;text-decoration:none;cursor:pointer}
+button.s:hover,a.s:hover{border-color:var(--acc);color:var(--acc)}
+button.s.d{color:var(--bad)}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.muted{color:var(--muted);font-size:13px}
+.ok{color:var(--ok)}
+.bad{color:var(--bad)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid .card{margin-bottom:0}
+.stat{font-size:22px;font-weight:700;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.tag.ok{background:#ecfdf5;color:#047857;border-color:#a7f3d0}
+@media (prefers-color-scheme: dark){:root:not([data-theme=light]) .tag.ok{background:#052e22;color:#6ee7b7;border-color:#065f46}}
+.msg{padding:12px 14px;border-radius:12px;margin-bottom:12px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);font-weight:500}
+.msg.ok{color:var(--ok);border-color:#a7f3d0}
+.msg.bad{color:var(--bad);border-color:#fecaca}
+
+/* ---------- Premium polish (pass 2) ---------- */
+body{background:radial-gradient(1200px 600px at 10% -10%,rgba(99,102,241,.13),transparent 60%),radial-gradient(900px 500px at 110% 10%,rgba(16,185,129,.09),transparent 60%),var(--bg);min-height:100vh}
+@media (prefers-color-scheme: dark){:root:not([data-theme=light]) body{background:radial-gradient(1200px 600px at 10% -10%,rgba(99,102,241,.22),transparent 60%),radial-gradient(900px 500px at 110% 10%,rgba(16,185,129,.12),transparent 60%),var(--bg)}}
+header{position:relative;overflow:hidden;border-bottom-left-radius:22px;border-bottom-right-radius:22px}
+header::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 70%);pointer-events:none}
+header h1{font-size:21px;display:flex;align-items:center;gap:8px}
+header h1::before{content:"";width:10px;height:10px;border-radius:50%;background:#34d399;box-shadow:0 0 0 4px rgba(52,211,153,.25)}
+nav{border-bottom:none;background:transparent;padding:12px 12px 6px}
+nav button{background:var(--card);border:1px solid var(--line);box-shadow:0 1px 2px rgba(15,23,42,.04)}
+nav button.on{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent}
+.card{background:linear-gradient(180deg,var(--card),var(--card));transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-1px);box-shadow:0 2px 4px rgba(15,23,42,.05),0 12px 28px rgba(15,23,42,.10);border-color:#c7d2fe}
+@media (prefers-color-scheme: dark){:root:not([data-theme=light]) .card:hover{border-color:#3730a3}}
+.grid .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--acc),var(--acc2));border-radius:4px 0 0 4px;opacity:.85}
+.grid .card:nth-child(3n+2)::before{background:linear-gradient(180deg,#10b981,#34d399)}
+.grid .card:nth-child(3n+3)::before{background:linear-gradient(180deg,#f59e0b,#fbbf24)}
+.grid .card{padding:16px 16px 16px 20px}
+.grid .muted{text-transform:uppercase;letter-spacing:.06em;font-size:11px;font-weight:700}
+.stat{font-size:24px}
+.stat.ok{color:#059669}
+.stat.bad{color:#dc2626}
+h2{display:flex;align-items:center;gap:8px;color:var(--muted)}
+h2::before{content:"";width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc2));flex:none}
+h2[style*="margin-top:0"]::before{display:none}
+.tag{padding:4px 10px;letter-spacing:.01em}
+.tag.ok{box-shadow:0 0 0 3px rgba(16,185,129,.12)}
+button.p{letter-spacing:.01em;transition:transform .12s ease,box-shadow .2s ease}
+button.p:active{transform:scale(.98)}
+button.s,a.s{transition:all .15s ease}
+input,select{box-shadow:inset 0 1px 2px rgba(15,23,42,.04)}
+.msg{border-left:4px solid var(--acc)}
+.msg.ok{border-left-color:#10b981}
+.msg.bad{border-left-color:#ef4444}
+button[onclick^="bookBed"]{border-radius:16px !important;box-shadow:0 2px 6px rgba(15,23,42,.05) !important;transition:transform .15s ease,box-shadow .2s ease,background .2s ease !important}
+button[onclick^="bookBed"]:hover{transform:translateY(-2px) !important;box-shadow:0 10px 22px rgba(79,70,229,.18) !important;border-color:#6366f1 !important}
+button[onclick^="openMapBooked"]{border-radius:16px !important;box-shadow:0 6px 16px rgba(34,197,94,.25) !important;transition:transform .15s ease,box-shadow .2s ease !important}
+button[onclick^="openMapBooked"]:hover{transform:translateY(-2px) !important;box-shadow:0 12px 26px rgba(34,197,94,.35) !important}
+@media (prefers-color-scheme: dark){:root:not([data-theme=light]) button[onclick^="openMapBooked"]{background:#14532d !important;color:#dcfce7 !important;border-color:#22c55e !important}}
+main{padding-top:6px}
+
+:root[data-theme=light]{--bg:#f4f6fb;--card:#ffffff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;color-scheme:light}
+:root[data-theme=dark]{--bg:#0b1020;--card:#131a2e;--ink:#e6ebf5;--muted:#8b97b0;--line:#222c45;color-scheme:dark}
+input+button.s{margin:6px 0 0}
+
+/* ---------- Premium pass 3 ---------- */
+#top{backdrop-filter:none;-webkit-backdrop-filter:none;background:transparent}
+header{border-radius:0 0 26px 26px;padding-bottom:20px}
+header h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:20;margin:0;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--card) 88%,transparent);border-top:1px solid var(--line);box-shadow:0 -10px 30px rgba(15,23,42,.08);border-radius:0;gap:4px}
+nav button{padding:9px 14px;font-size:12.5px;font-weight:600;flex:0 0 auto}
+nav button.on{box-shadow:0 6px 16px rgba(79,70,229,.35)}
+main{padding-bottom:120px}
+.hero{background:linear-gradient(135deg,#0f172a 0%,#312e81 55%,#6d28d9 100%);color:#fff;border-radius:24px;padding:22px 22px 20px;margin:4px 0 16px;box-shadow:0 20px 44px rgba(49,46,129,.35);position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-50px;bottom:-70px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.22),transparent 70%);pointer-events:none}
+.hero-kicker{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+.hero-num{font-size:38px;font-weight:800;letter-spacing:-.035em;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.hero-sub{font-size:13px;opacity:.85}
+.card{border-radius:20px}
+.grid .card{border-radius:20px}
+.grid .stat{font-size:25px}
+h2{font-size:11.5px;letter-spacing:.1em;margin:24px 4px 12px}
+button.p{border-radius:14px}
+input,select{border-radius:14px}
+
+/* ---------- Bed Map: SaaS style ---------- */
+.page-head{margin:4px 2px 14px}
+.page-h{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0 0 2px;color:var(--ink);text-transform:none}
+.page-h::before{display:none}
+.map-hero{background:linear-gradient(135deg,var(--card),var(--card));padding:20px}
+.map-pct{font-size:40px}
+.map-total{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.bar{height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin:16px 0 14px}
+.bar span{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:999px;transition:width .4s ease}
+.ms-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ms{background:var(--bg);border-radius:14px;padding:12px}
+.ms-l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.ms-v{font-size:21px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:6px 4px 12px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:6px;vertical-align:-1px}
+.sw-v{border:2px dashed var(--muted)}
+.sw-b{background:#bbf7d0;border:2px solid #22c55e}
+.room-card{padding:16px}
+.room-title{font-weight:700;font-size:16px;letter-spacing:-.01em}
+.pill{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px;white-space:nowrap}
+.pill-free{background:#eef2ff;color:#4338ca}
+.pill-full{background:#dcfce7;color:#166534}
+.seats{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px;margin-top:14px}
+.seat{border-radius:16px;padding:12px 12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px;font-family:inherit;min-width:0}
+.seat-code{font-weight:800;font-size:15px}
+.seat-name{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seat-v{background:var(--card);border:2px dashed var(--muted);color:var(--ink)}
+.seat-v .seat-name{color:var(--muted)}
+.seat-b{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:2px solid #22c55e;color:#14532d}
+@media (prefers-color-scheme: dark){:root:not([data-theme=light]) .seat-b{background:linear-gradient(135deg,#14532d,#166534);color:#dcfce7}:root:not([data-theme=light]) .pill-free{background:#1e1b4b;color:#c7d2fe}:root:not([data-theme=light]) .pill-full{background:#052e22;color:#6ee7b7}:root:not([data-theme=light]) .sw-b{background:#14532d}}
+:root[data-theme=dark] .seat-b{background:linear-gradient(135deg,#14532d,#166534);color:#dcfce7}
+:root[data-theme=dark] .pill-free{background:#1e1b4b;color:#c7d2fe}
+:root[data-theme=dark] .pill-full{background:#052e22;color:#6ee7b7}
+:root[data-theme=dark] .sw-b{background:#14532d}
+
+.map-hero .hero-kicker{font-size:10.5px;letter-spacing:.05em;line-height:1.3}
+
+/* Compact occupancy card on the Bed Map */
+.map-hero{padding:14px 16px}
+.map-pct{font-size:28px}
+.map-total{font-size:18px}
+.map-hero .bar{height:8px;margin:12px 0 10px}
+.map-hero .ms-row{gap:6px}
+.map-hero .ms{padding:8px 10px;border-radius:12px}
+.map-hero .ms-l{font-size:10px}
+.map-hero .ms-v{font-size:16px;margin-top:2px}
+
+/* Property selector and occupancy side by side on the Bed Map */
+.map-top{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch}
+.map-top>.card{margin-bottom:0}
+.map-top .map-hero{display:flex;flex-direction:column;justify-content:center}
+
+/* Compact summary cards on the Dashboard */
+.grid{gap:8px}
+.grid .card{padding:10px 12px 10px 16px;border-radius:14px}
+.grid .card::before{width:3px}
+.grid .muted{font-size:10px;letter-spacing:.05em}
+.grid .stat{font-size:18px;margin-top:4px}
+
+/* ---------- Compact pass across all tabs ---------- */
+main{padding:10px 10px 110px}
+.card{padding:12px;margin-bottom:8px;border-radius:14px}
+.page-head{margin:2px 2px 10px}
+.page-h{font-size:20px}
+h2{margin:14px 2px 8px;font-size:10.5px}
+label{margin:8px 2px 4px;font-size:11.5px}
+input,select{padding:8px 10px;font-size:15px;border-radius:10px}
+button.p{padding:10px 12px;font-size:14px;margin-top:10px;border-radius:10px}
+button.s,a.s{padding:5px 9px;font-size:12px;border-radius:8px}
+.tag{padding:2px 7px;font-size:10.5px}
+.muted{font-size:12px}
+.hero{padding:14px 16px;border-radius:18px;margin:2px 0 10px}
+.hero-num{font-size:26px;margin:3px 0 2px}
+.hero-kicker{font-size:10px}
+.hero-sub{font-size:12px}
+.grid{gap:6px}
+.grid .card{padding:8px 10px 8px 14px;border-radius:12px}
+.grid .stat{font-size:16px;margin-top:3px}
+.grid .muted{font-size:9.5px}
+.row{gap:8px}
+.msg{padding:8px 10px;font-size:13px;border-radius:10px;margin-bottom:8px}
+nav{padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{padding:6px 11px;font-size:11.5px}
+header{padding:10px 14px 12px;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+header h1{font-size:17px}
+header .sub{font-size:11px}
+/* Bed Map */
+.map-top{gap:8px}
+.map-hero{padding:10px 12px}
+.map-pct{font-size:22px}
+.map-total{font-size:15px}
+.map-hero .bar{height:6px;margin:8px 0 8px}
+.map-hero .ms{padding:6px 8px}
+.map-hero .ms-l{font-size:9px}
+.map-hero .ms-v{font-size:14px}
+.map-hero .hero-kicker{font-size:9.5px}
+.legend{font-size:11px;margin:4px 2px 8px;gap:12px}
+.room-card{padding:10px}
+.room-title{font-size:14px}
+.pill{font-size:10px;padding:3px 8px}
+.seats{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:6px;margin-top:8px}
+.seat{padding:8px 9px;border-radius:12px;gap:2px}
+.seat-code{font-size:13px}
+.seat-name{font-size:10.5px}
+/* Tenants, OPEX, backup */
+.stat{font-size:18px}
+
+/* Active Tenants: two cards per row */
+.tenant-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
+.tenant-grid .card{margin-bottom:0}
+.tenant-grid .card b{font-size:14px}
+
+/* Header and Dashboard hero follow the chosen accent colour (Backup > Appearance) */
+header{background:linear-gradient(135deg,#0f172a 0%,var(--acc) 70%,var(--acc2) 100%) !important}
+.hero{background:linear-gradient(135deg,#0f172a 0%,var(--acc) 60%,var(--acc2) 100%) !important}
+
+/* Page background from Backup > Appearance */
+:root{--page:radial-gradient(1200px 600px at 10% -10%,rgba(99,102,241,.13),transparent 60%),var(--bg)}
+body{background:var(--page) !important;background-attachment:fixed}
+
+/* Card colour from Backup > Appearance, with automatically matched text */
+.card{background:var(--cardbg,var(--card)) !important;color:var(--card-ink,var(--ink))}
+.card .muted{color:var(--card-ink,var(--muted));opacity:.8}
+
+/* Coloured tabs: each tab has its own colour; the selected tab shows a two-colour highlight */
+nav button:nth-child(1){--tc1:#6366f1;--tc2:#8b5cf6}
+nav button:nth-child(2){--tc1:#10b981;--tc2:#14b8a6}
+nav button:nth-child(3){--tc1:#f59e0b;--tc2:#f97316}
+nav button:nth-child(4){--tc1:#0ea5e9;--tc2:#3b82f6}
+nav button:nth-child(5){--tc1:#a855f7;--tc2:#ec4899}
+nav button:nth-child(6){--tc1:#ef4444;--tc2:#f43f5e}
+nav button:nth-child(7){--tc1:#64748b;--tc2:#334155}
+nav button:not(.on){background:color-mix(in srgb,var(--tc1) 16%,var(--card)) !important;color:var(--tc1) !important;font-weight:600 !important}
+nav button.on{background:linear-gradient(135deg,var(--tc1),var(--tc2)) !important;color:#fff !important;box-shadow:0 6px 16px color-mix(in srgb,var(--tc1) 40%,transparent) !important}
+
+/* Dashboard profit/loss card follows the card colour from Backup > Appearance */
+.hero{background:var(--cardbg,var(--card)) !important;color:var(--card-ink,var(--ink)) !important;border:1px solid var(--line)}
+.hero-kicker,.hero-sub{color:var(--card-ink,var(--ink));opacity:.8}
+.hero::after{background:radial-gradient(circle,rgba(0,0,0,.04),transparent 70%)}
+
+/* PG Guru title bar uses its own colour from Backup > Appearance */
+header{background:var(--hdr) !important;color:var(--hdr-ink,#ffffff) !important}
+header .sub{opacity:.85}
+
+
+/* Dashboard Month / Overall tabs */
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px;margin:2px 0 10px}
+.seg button{flex:1;border:0;background:transparent;padding:8px 10px;border-radius:999px;font-weight:600;font-size:13px;color:var(--muted);cursor:pointer}
+.seg button.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 4px 12px color-mix(in srgb,var(--acc) 35%,transparent)}
+
+/* Overall tab: property slicer and month-by-month table */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.chip.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent}
+.tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:460px}
+.tbl th,.tbl td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em}
+.tbl td.ok{color:#059669;font-weight:700}
+.tbl td.bad{color:#dc2626;font-weight:700}
+
+/* ---------- Visual refresh ---------- */
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+main{animation:fadeUp .35s ease both}
+.msg{position:fixed;left:12px;right:12px;bottom:84px;z-index:30;margin:0;text-align:center;box-shadow:0 12px 30px rgba(15,23,42,.18);animation:toastIn .3s ease both;border-radius:14px}
+nav button{display:flex;flex-direction:column;align-items:center;min-width:64px}
+nav button .ti{display:block;font-size:15px;line-height:1;margin-bottom:2px;text-align:center}
+.stat{font-weight:800}
+.who{display:flex;align-items:center;gap:8px;min-width:0}
+.av{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;flex:none;box-shadow:0 4px 10px rgba(15,23,42,.15)}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px}
+.st i{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.st-paid{background:#dcfce7;color:#15803d}
+.st-partial{background:#fef3c7;color:#b45309}
+.st-unpaid{background:#fee2e2;color:#b91c1c}
+.card.empty{text-align:center;padding:22px 14px;border-style:dashed;background:transparent;box-shadow:none;color:var(--muted);font-size:13px}
+.card.empty::before{content:"◌";display:block;font-size:22px;opacity:.5;margin-bottom:6px}
+.donut-wrap{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.lgs{flex:1;min-width:150px;display:flex;flex-direction:column;gap:6px}
+.lg{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink)}
+.lg i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.lg b{margin-left:auto;font-variant-numeric:tabular-nums}
+.seat{position:relative}
+.seat::before{content:"";position:absolute;top:-7px;left:14%;right:14%;height:7px;border-radius:7px 7px 3px 3px;background:currentColor;opacity:.18}
+
+/* ---------- Inside-tab enhancements ---------- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:0 0 10px}
+.tile{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;box-shadow:var(--shadow)}
+.tile-ic{width:34px;height:34px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font-size:15px;flex:none}
+.tile-v{font-size:17px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.who.big{gap:12px;margin-bottom:6px}
+.av.xl{width:46px;height:46px;font-size:15px;border-radius:16px}
+.det-name{font-size:18px;font-weight:800;letter-spacing:-.01em}
+.card h2:first-child{margin-top:0}
+label{color:var(--muted)}
+.card>label:first-child{margin-top:0}
+
+/* ---------- Design system pass: patterns from widely used apps ---------- */
+/* Type: platform-native stack, like iOS and Android system fonts */
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,Roboto,system-ui,sans-serif;font-feature-settings:"ss01","cv11"}
+/* Large page titles, as in iOS Settings and Health */
+.page-h{font-size:28px;font-weight:800;letter-spacing:-.03em;margin:4px 2px 2px}
+.page-head .muted{font-size:13px}
+/* Tappable rows: chevron and press feedback, as in iOS Settings and Revolut lists */
+.card[onclick]{cursor:pointer;position:relative;padding-right:34px}
+.card[onclick]::after{content:"›";position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--muted);opacity:.7}
+.card[onclick]:active,.card.row:active,button:active{transform:scale(.98)}
+/* Hairline dividers and quieter surfaces, as in Stripe and Airbnb */
+.card{border-color:color-mix(in srgb,var(--line) 85%,transparent)}
+.card h2{letter-spacing:.06em}
+/* Primary actions: solid, full-width, with clear focus, as in Material and iOS */
+button.p{letter-spacing:-.005em;font-weight:650}
+button.p:focus-visible,button.s:focus-visible,input:focus-visible,select:focus-visible,nav button:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 35%,transparent)}
+/* Segmented controls, as in iOS */
+.seg button{transition:background .2s ease,color .2s ease}
+/* Calmer tab bar with icon-first hierarchy, as in Instagram and Airbnb */
+nav button:not(.on){font-weight:600}
+nav button.on .ti{transform:translateY(-1px)}
+
+/* Landing and sign-in */
+.land-hero{padding:18px 6px 14px}
+.land-kicker{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
+.land-h{font-size:26px;font-weight:800;letter-spacing:-.03em;margin:6px 0 6px;line-height:1.15}
+.demo-code{background:color-mix(in srgb,var(--acc) 10%,var(--card));border:1px dashed var(--acc);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
+.demo-code b{font-size:18px;letter-spacing:.2em}
+</style>
+</head>
+<body>
+<div id="top"><header><h1>PG Guru</h1><div class="sub">Property Details · Tenants · Rent · Opex</div></header>
+</div><nav id="nav"></nav>
+<main id="app"></main>
+<script>
+const KEY='pgmanager.v1';
+const CATS=['Electricity','Wi-Fi','Water','Cleaning','Electrician','Maintenance','Miscellaneous'];
+const EMPTY={properties:[],beds:[],tenants:[],payments:[],expenses:[],blocks:[],settings:{}};
+let db=EMPTY;
+let ui={tab:'dash',prop:null,tenant:null,month:null,msg:'',bad:false};
+try{db=Object.assign({},EMPTY,JSON.parse(localStorage.getItem(KEY))||{});}catch(e){db=EMPTY;}
+function normBeds(){db.beds.forEach(b=>{if(/^\d+$/.test(b.bed))b.bed=String.fromCharCode(64+Number(b.bed));});}
+normBeds();
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){flash('Could not save on this device. Export a backup.',true);}}
+function flash(t,bad){ui.msg=t;ui.bad=!!bad;}
+function fail(t){flash(t,true);render();}
+
+const $=id=>document.getElementById(id).value.trim();
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const ymd=d=>{d=new Date(d);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const money=n=>'₹'+Math.round(n||0).toLocaleString('en-IN');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const activeOf=bedId=>db.tenants.find(t=>t.bedId===bedId&&!t.checkout);
+const bedRent=id=>{const b=db.beds.find(x=>x.id===id);return b?b.rent:'';};
+const curProp=()=>{if(!db.properties.find(p=>p.id===ui.prop))ui.prop=db.properties[0]?.id||null;return db.properties.find(p=>p.id===ui.prop);};
+const propBeds=p=>db.beds.filter(b=>b.propId===p.id);
+const bkey=b=>(b.block||'')+'|'+b.room;
+const propBlocks=p=>[...new Set([...db.blocks.filter(x=>x.propId===p.id).map(x=>x.name),...propBeds(p).map(b=>b.block||'')])].filter(Boolean);
+const propTenantIds=p=>new Set(db.tenants.filter(t=>propBeds(p).some(b=>b.id===t.bedId)).map(t=>t.id));
+const waLink=(mobile,msg)=>'https://wa.me/91'+mobile+'?text='+encodeURIComponent(msg);
+const reminder=(name,amt)=>`Hello ${name}, this is a reminder that ${money(amt)} is pending towards your PG rent. Kindly pay at the earliest. Thank you.`;
+
+function due(t){
+  if(!t.checkin)return{expected:0,paid:0,due:0};
+  const ci=new Date(t.checkin+'T00:00:00');
+  const end=t.checkout?new Date(t.checkout+'T00:00:00'):new Date();
+  const months=Math.max(0,(end.getFullYear()-ci.getFullYear())*12+(end.getMonth()-ci.getMonth())+(end.getDate()>=t.billDay?1:0));
+  const expected=months*t.rent;
+  const paid=db.payments.filter(p=>p.tenantId===t.id).reduce((s,p)=>s+p.amount,0);
+  return{expected,paid,due:expected-paid};
+}
+
+const ACCENTS=[['#4f46e5','#7c3aed'],['#059669','#10b981'],['#e11d48','#f43f5e'],['#d97706','#f59e0b'],['#0284c7','#0ea5e9']];
+const BGS=[
+  ['Default','radial-gradient(1200px 600px at 10% -10%,rgba(99,102,241,.13),transparent 60%),radial-gradient(900px 500px at 110% 10%,rgba(16,185,129,.09),transparent 60%),var(--bg)'],
+  ['Sky','radial-gradient(900px 500px at 10% -10%,#bae6fd,transparent 60%),radial-gradient(800px 500px at 110% 10%,#c7d2fe,transparent 60%),#eef6ff'],
+  ['Mint','linear-gradient(160deg,#d1fae5 0%,#a7f3d0 45%,#ecfeff 100%)'],
+  ['Peach','linear-gradient(160deg,#ffe4e6 0%,#fed7aa 50%,#fff7ed 100%)'],
+  ['Lavender','linear-gradient(160deg,#ede9fe 0%,#f5d0fe 50%,#fdf4ff 100%)'],
+  ['Sunset','linear-gradient(160deg,#f97316 0%,#ec4899 55%,#8b5cf6 100%)'],
+  ['Ocean','linear-gradient(160deg,#0ea5e9 0%,#2563eb 55%,#1e1b4b 100%)'],
+  ['Lime','linear-gradient(160deg,#84cc16 0%,#14b8a6 60%,#0891b2 100%)']
+];
+function applyTheme(){
+  const s=db.settings||{};
+  const a=ACCENTS[s.accent||0]||ACCENTS[0];
+  const bg=BGS[s.bg||0]||BGS[0];
+  const st=document.documentElement.style;
+  st.setProperty('--acc',a[0]); st.setProperty('--acc2',a[1]);
+  st.setProperty('--page',bg[1]);
+  const hd=HDRS[s.hdr||0]||HDRS[0];
+  st.setProperty('--hdr',hd[1]);
+  st.setProperty('--hdr-ink',hd[2]);
+  const cc=CARDS[s.card||0]||CARDS[0];
+  if(cc[1]){st.setProperty('--cardbg',cc[1]);st.setProperty('--card-ink',cc[2]);}else{st.removeProperty('--cardbg');st.removeProperty('--card-ink');}
+  document.documentElement.setAttribute('data-theme',s.mode||'system');
+}
+const CARDS=[
+  ['Classic',null,null],
+  ['White','#ffffff','#0f172a'],
+  ['Indigo','#4f46e5','#ffffff'],
+  ['Violet','#8b5cf6','#ffffff'],
+  ['Rose','#f43f5e','#ffffff'],
+  ['Amber','#fbbf24','#451a03'],
+  ['Emerald','#10b981','#052e22'],
+  ['Sky','#38bdf8','#082f49'],
+  ['Mint','#d1fae5','#064e3b'],
+  ['Peach','#ffedd5','#7c2d12'],
+  ['Ink','#0f172a','#f8fafc']
+];
+function setBg(i){db.settings.bg=i;save();render();}
+const HDRS=[
+  ['Sky','linear-gradient(135deg,#38bdf8 0%,#60a5fa 60%,#a5b4fc 100%)','#ffffff'],
+  ['Coral','linear-gradient(135deg,#fb7185 0%,#fb923c 65%,#fbbf24 100%)','#ffffff'],
+  ['Mint','linear-gradient(135deg,#6ee7b7 0%,#34d399 60%,#5eead4 100%)','#064e3b'],
+  ['Lemon','linear-gradient(135deg,#fef08a 0%,#fde047 60%,#fcd34d 100%)','#713f12'],
+  ['Lavender','linear-gradient(135deg,#ddd6fe 0%,#c4b5fd 60%,#f0abfc 100%)','#4c1d95'],
+  ['Peach','linear-gradient(135deg,#fed7aa 0%,#fdba74 60%,#fca5a5 100%)','#7c2d12'],
+  ['Lime','linear-gradient(135deg,#d9f99d 0%,#bef264 60%,#86efac 100%)','#365314']
+];
+function setHdr(i){db.settings.hdr=i;save();render();}
+function setCard(i){db.settings.card=i;save();render();}
+function setAccent(i){db.settings.accent=i;save();render();}
+function setMode(m){db.settings.mode=m;save();render();}
+function setQr(){db.settings.qrUrl=$('qrl');save();flash('Payment QR link saved.');render();}
+function setExp(){ui.prop=$('xprop');render();}
+function monthLabel(mo){return new Date(mo+'-01T00:00:00').toLocaleString('en-IN',{month:'short',year:'numeric'});}
+function propOfT(t){const b=db.beds.find(x=>x.id===t.bedId);const pr=db.properties.find(x=>x.id===(b&&b.propId));return pr?pr.name:'';}
+function codeOfT(t){const b=db.beds.find(x=>x.id===t.bedId);return b?b.room+b.bed:'';}
+function duesBreakdown(t){return billMonths(t).map(mo=>({mo,due:t.rent-paidFor(t,mo)})).filter(x=>x.due>0);}
+function duesMessage(t){
+  const rows=duesBreakdown(t);
+  const total=rows.reduce((s,r)=>s+r.due,0);
+  const head=rows.length>1?`your pending rent for ${rows.length} months`:`your pending rent for ${rows[0]?monthLabel(rows[0].mo):'this period'}`;
+  let msg=`Hello ${t.name},\n\nThis is a reminder of ${head}.\n\nProperty: ${propOfT(t)}\nRoom: ${codeOfT(t)}\n\n`;
+  msg+=rows.map(r=>`${monthLabel(r.mo)}: ${money(r.due)}`).join('\n');
+  msg+=`\n\nTotal due: ${money(total)}\n\nPlease pay at the earliest.`;
+  if(db.settings.qrUrl)msg+=`\n\nPay using the GPay QR code below:\n${db.settings.qrUrl}`;
+  return msg;
+}
+function hash(s){let x=0;for(const c of s)x=(x*31+c.charCodeAt(0))|0;return String(x);}
+function startWipe(){ui.wipe=true;render();}
+function startChangePass(){ui.pwMode='change';render();}
+function changePass(){
+  const oldV=$('pwold'), nw=$('pwnew');
+  if(!db.settings.pass)return fail('No passcode is set yet.');
+  if(hash(oldV)!==db.settings.pass)return fail('Current passcode is wrong.');
+  if(!/^\d{6}$/.test(nw))return fail('New passcode must be exactly 6 digits.');
+  db.settings.pass=hash(nw); ui.pwMode=null; save(); flash('Passcode changed.'); render();
+}
+function resetPass(){
+  if(!db.settings.pass)return fail('No passcode is set yet.');
+  if(!armed('resetpass'))return;
+  delete db.settings.pass; ui.pwMode=null; save();
+  flash('Passcode removed. Set a new 6-digit passcode under Erase All Data.'); render();
+}
+function wipeAction(){
+  const v=$('wpc'), s=db.settings;
+  if(!v)return fail('Enter a passcode.');
+  if(!s.pass){
+    if(!/^\d{6}$/.test(v))return fail('Passcode must be exactly 6 digits.');
+    s.pass=hash(v); save(); ui.wipe=true; flash('Passcode saved. Enter it again to erase all data.'); return render();
+  }
+  if(hash(v)!==s.pass)return fail('Wrong passcode. Data was not erased.');
+  db=Object.assign(JSON.parse(JSON.stringify(EMPTY)),{settings:s});
+  ui.prop=null; ui.tenant=null; ui.wipe=false;
+  save(); flash('All data erased from this device.'); render();
+}
+function voice(id){
+  const R=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const keyboardTip="Tap the field and use your keyboard's microphone key instead.";
+  if(!R){flash('Voice typing is not available in this browser. '+keyboardTip,true);render();return;}
+  const r=new R(); r.lang='en-IN'; r.interimResults=false; r.maxAlternatives=1;
+  r.onresult=ev=>{let t=ev.results[0][0].transcript.trim(); if(id==='tm'||id==='ta')t=t.replace(/\D/g,''); const el=document.getElementById(id); if(el)el.value=t;};
+  r.onerror=ev=>{
+    const why={
+      'not-allowed':'This preview does not allow the Speak button to use the microphone, even when your phone allows it. '+keyboardTip,
+      'service-not-allowed':'Speech service is blocked on this device. '+keyboardTip,
+      'no-speech':'No speech was heard. Tap Speak and talk clearly.',
+      'audio-capture':'No microphone was found on this device. '+keyboardTip,
+      'network':'Voice typing needs an internet connection. '+keyboardTip
+    }[ev.error]||('Voice input stopped ('+ev.error+'). '+keyboardTip);
+    flash(why,true); render();
+  };
+  try{r.start();}catch(err){flash('Voice input could not start. '+keyboardTip,true);render();}
+}
+function sumMetrics(mo){return db.properties.map(p=>propMetrics(p,mo)).reduce((a,r)=>({collected:a.collected+r.collected,opex:a.opex+r.opex,net:a.net+r.net}),{collected:0,opex:0,net:0});}
+function pickMonth(k){ui.month=k;render();}
+function miniChart(title,getM){
+  const base=ymd(new Date()).slice(0,7).split('-').map(Number);
+  const months=[...Array(6)].map((_,i)=>{const d=new Date(base[0],base[1]-1-(5-i),1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');});
+  const data=months.map(k=>({k,...getM(k)}));
+  const max=Math.max(1,...data.flatMap(d=>[d.collected,d.opex,Math.abs(d.net)]));
+  const W=640,H=230,floor=190,top=16,slot=W/6,bw=14;
+  let g='';
+  data.forEach((d,i)=>{
+    const cx=i*slot+slot/2;
+    [[d.collected,'#10b981',-(bw+3)],[d.opex,'#f59e0b',0],[Math.abs(d.net),d.net<0?'#ef4444':'#3b82f6',bw+3]].forEach(([v,c,o])=>{
+      const hgt=(v/max)*(floor-top);
+      g+=`<rect x="${cx+o-bw/2}" y="${floor-hgt}" width="${bw}" height="${hgt}" rx="4" fill="${c}"/>`;
+    });
+    g+=`<text onclick="pickMonth('${d.k}')" style="cursor:pointer" x="${cx}" y="${H-8}" font-size="12" text-anchor="middle" fill="currentColor" opacity=".75">${new Date(d.k+'-01T00:00:00').toLocaleString('en-IN',{month:'short'})}</text>`;
+  });
+  const chips=data.map(d=>{const sel=d.k===ui.month;const lab=new Date(d.k+'-01T00:00:00').toLocaleString('en-IN',{month:'short'});
+    return `<button onclick="pickMonth('${d.k}')" class="tag ${d.net<0?'':'ok'}" style="cursor:pointer;font:inherit;${sel?'background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent':(d.net<0?'color:#dc2626':'')}">${lab}: ${money(d.net)}</button>`;}).join(' ');
+  return `<div class="card"><h2 style="margin-top:0">${esc(title)}</h2>
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;color:var(--muted)">${g}<line x1="0" x2="${W}" y1="${floor}" y2="${floor}" stroke="var(--line)"/></svg>
+    <div class="muted" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px"><span><span style="color:#10b981">●</span> Revenue</span><span><span style="color:#f59e0b">●</span> Opex</span><span><span style="color:#3b82f6">●</span> Profit</span><span><span style="color:#ef4444">●</span> Loss</span></div>
+    <div style="margin-top:10px">${chips}</div></div>`;
+}
+/* ---------- Accounts: landing page, sign up, sign in, forgot password / login ID ---------- */
+const USERS_KEY='pgmanager.users', SESS_KEY='pgmanager.session';
+let users=[]; try{users=JSON.parse(localStorage.getItem(USERS_KEY))||[];}catch(e){users=[];}
+let session=localStorage.getItem(SESS_KEY)||null;
+function saveUsers(){try{localStorage.setItem(USERS_KEY,JSON.stringify(users));}catch(e){}}
+function normMobile(s){return String(s||'').replace(/\D/g,'').slice(-10);}
+function findUser(id){const v=String(id||'').trim().toLowerCase();const mob=normMobile(id);return users.find(u=>(v&&u.email===v)||(mob.length===10&&u.mobile===mob))||null;}
+function currentUser(){return users.find(u=>u.id===session)||null;}
+function otpCode(){return String(Math.floor(100000+Math.random()*900000));}
+function maskMobile(m){return '******'+String(m).slice(-4);}
+function maskEmail(e){const [a,d]=String(e).split('@');return (a[0]||'')+'***@'+d;}
+function demoCode(code){return `<div class="demo-code">Demo code: <b>${code}</b><div class="muted">In the hosted app this code is sent by SMS or email. It is shown here because this preview cannot send messages.</div></div>`;}
+function authErr(t){ui.auth.err=t;render();}
+function authGo(view){ui.auth={view,method:null,step:1,otp:null,err:''};render();}
+function chooseMethod(m){ui.auth.method=m;ui.auth.step=1;ui.auth.err='';render();}
+function signIn(id){const u=users.find(x=>x.id===id);session=id;localStorage.setItem(SESS_KEY,id);ui.auth={view:'landing'};ui.tab='dash';flash('Welcome, '+(u?u.name:'')+'.');render();}
+function signOut(){session=null;localStorage.removeItem(SESS_KEY);ui.tab='dash';flash('Signed out.');render();}
+function sendSignupCode(){
+  const a=ui.auth, name=$('sn'), idv=$('sid');
+  if(!name)return authErr('Enter your name.');
+  if(a.method==='google'&&!/^\S+@\S+\.\S+$/.test(idv))return authErr('Enter your Google account email.');
+  if(a.method==='mobile'&&normMobile(idv).length!==10)return authErr('Enter a valid 10-digit mobile number.');
+  if(findUser(idv))return authErr('An account already exists with this email or mobile. Please sign in.');
+  a.name=name; a.idv=idv; a.otp=otpCode(); a.step=2; a.err=''; render();
+}
+function verifySignupCode(){
+  const a=ui.auth;
+  if($('sotp')!==a.otp)return authErr('Wrong code. Please try again.');
+  a.step=3; a.err=''; render();
+}
+function createAccount(){
+  const a=ui.auth, pw=$('spw'), pw2=$('spw2');
+  if(pw.length<6)return authErr('Password must be at least 6 characters.');
+  if(pw!==pw2)return authErr('Passwords do not match.');
+  const u={id:uid(),name:a.name,email:a.method==='google'?a.idv.toLowerCase():'',mobile:a.method==='mobile'?normMobile(a.idv):'',method:a.method,pass:hash(pw),created:new Date().toISOString()};
+  users.push(u); saveUsers(); signIn(u.id);
+}
+function doSignIn(){
+  const e=$('aemail'), mo=$('amob'), pw=$('apass');
+  const u=findUser(e||mo);
+  if(!u)return authErr('No account found for this email or mobile number.');
+  if(!pw)return authErr('Enter your password.');
+  if(hash(pw)!==u.pass)return authErr('Wrong password.');
+  signIn(u.id);
+}
+function fpSend(){
+  const a=ui.auth, u=findUser($('fid'));
+  if(!u)return authErr('No account found for this email or mobile number.');
+  a.target=u.id; a.otp=otpCode(); a.step=2; a.err=''; render();
+}
+function fpReset(){
+  const a=ui.auth, pw=$('fpw'), pw2=$('fpw2');
+  if($('fotp')!==a.otp)return authErr('Wrong code. Please try again.');
+  if(pw.length<6)return authErr('Password must be at least 6 characters.');
+  if(pw!==pw2)return authErr('Passwords do not match.');
+  const u=users.find(x=>x.id===a.target); if(!u)return authErr('Account not found.');
+  u.pass=hash(pw); saveUsers(); ui.auth={view:'signin'}; flash('Password updated. Please sign in.'); render();
+}
+function fiSend(){
+  const a=ui.auth, u=findUser($('fidm'));
+  if(!u)return authErr('No account found for this mobile number.');
+  a.target=u.id; a.otp=otpCode(); a.step=2; a.err=''; render();
+}
+function authView(){
+  const a=ui.auth||(ui.auth={view:'landing',step:1});
+  const back=`<button class="s" style="width:100%;margin-top:8px" onclick="authGo('landing')">Back</button>`;
+  const errBox=a.err?`<div class="msg bad" style="margin:0 0 10px">${esc(a.err)}</div>`:'';
+  const hero=`<div class="land-hero"><div class="land-kicker">PG & Hostel Management</div><h2 class="land-h">Run your PG and hostel from one place</h2><div class="muted">Rooms, tenants, rent, expenses, and reports, all in one app.</div></div>`;
+  let body='';
+  if(a.view==='landing'){
+    body=`<div class="card"><button class="p" onclick="authGo('signup')">Sign Up</button><button class="s" style="width:100%;margin-top:8px" onclick="authGo('signin')">Sign In</button>
+      <div class="row" style="justify-content:center;margin-top:14px"><button class="s" onclick="authGo('forgotPass')">Forgot Password</button><button class="s" onclick="authGo('forgotId')">Forgot Login ID</button></div></div>`;
+  }
+  else if(a.view==='signup'){
+    if(!a.method){
+      body=`<div class="card"><h2 style="margin-top:0">Create Account</h2><div class="muted">Choose how you want to sign up</div>
+        <button class="p" onclick="chooseMethod('google')">Continue With Google</button>
+        <button class="s" style="width:100%;margin-top:8px" onclick="chooseMethod('mobile')">Sign Up With Mobile Number</button>${back}</div>`;
+    } else {
+      const g=a.method==='google';
+      const idField=g?`<label>Google Account Email</label><input id="sid" type="email" value="${esc(a.idv||'')}" placeholder="you@gmail.com">`:`<label>Mobile Number</label><input id="sid" inputmode="numeric" maxlength="10" value="${esc(a.idv||'')}" placeholder="10-digit mobile">`;
+      let inner='';
+      if(a.step===1) inner=`<label>Full Name</label><input id="sn" value="${esc(a.name||'')}">${idField}<button class="p" onclick="sendSignupCode()">Send Verification Code</button>`;
+      else if(a.step===2) inner=`<div class="muted">Enter the code sent to ${g?esc(a.idv):maskMobile(normMobile(a.idv))}</div>${demoCode(a.otp)}<label>Verification Code</label><input id="sotp" inputmode="numeric" maxlength="6"><button class="p" onclick="verifySignupCode()">Verify</button>`;
+      else inner=`<label>Create Password (6+ characters)</label><input id="spw" type="password"><label>Confirm Password</label><input id="spw2" type="password"><button class="p" onclick="createAccount()">Create Account</button>`;
+      body=`<div class="card"><h2 style="margin-top:0">${g?'Sign Up With Google':'Sign Up With Mobile'}</h2>${errBox}${inner}<button class="s" style="width:100%;margin-top:8px" onclick="chooseMethod(null);ui.auth.method=null;render()">Change Sign Up Method</button>${back}</div>`;
+    }
+  }
+  else if(a.view==='signin'){
+    body=`<div class="card"><h2 style="margin-top:0">Sign In</h2>${errBox}
+      <label>Google Account Email</label><input id="aemail" type="email" placeholder="you@gmail.com">
+      <label>Mobile Number</label><input id="amob" inputmode="numeric" maxlength="10" placeholder="10-digit mobile">
+      <label>Password</label><input id="apass" type="password">
+      <button class="p" onclick="doSignIn()">Sign In</button>
+      <div class="muted" style="margin-top:8px">Fill in either your Google account email or your mobile number.</div>
+      <div class="row" style="justify-content:center;margin-top:10px"><button class="s" onclick="authGo('forgotPass')">Forgot Password</button><button class="s" onclick="authGo('forgotId')">Forgot Login ID</button></div>${back}</div>`;
+  }
+  else if(a.view==='forgotPass'){
+    body=`<div class="card"><h2 style="margin-top:0">Forgot Password</h2>${errBox}`+(a.step===1?
+      `<label>Google Account Email Or Mobile Number</label><input id="fid" placeholder="email or mobile"><button class="p" onclick="fpSend()">Send Code</button>`:
+      `<div class="muted">Enter the code sent to your registered contact.</div>${demoCode(a.otp)}<label>Verification Code</label><input id="fotp" inputmode="numeric" maxlength="6"><label>New Password (6+ characters)</label><input id="fpw" type="password"><label>Confirm New Password</label><input id="fpw2" type="password"><button class="p" onclick="fpReset()">Reset Password</button>`)+`${back}</div>`;
+  }
+  else if(a.view==='forgotId'){
+    const found=a.step===2&&a.target?users.find(x=>x.id===a.target):null;
+    body=`<div class="card"><h2 style="margin-top:0">Forgot Login ID</h2>${errBox}`+(a.step===1?
+      `<label>Registered Mobile Number</label><input id="fidm" inputmode="numeric" maxlength="10" placeholder="10-digit mobile"><button class="p" onclick="fiSend()">Send Code</button>`:
+      (a.otpShown?`<div class="card"><div class="muted">Your login ID</div><div class="stat">${found?(found.method==='google'?esc(maskEmail(found.email)):esc(maskMobile(found.mobile))):'-'}</div></div><button class="p" onclick="authGo('signin')">Go To Sign In</button>`:
+      `<div class="muted">Enter the code sent to your mobile number.</div>${demoCode(a.otp)}<label>Verification Code</label><input id="fotp" inputmode="numeric" maxlength="6"><button class="p" onclick="fiShow()">Show My Login ID</button>`))+`${back}</div>`;
+  }
+  return hero+body;
+}
+function fiShow(){const a=ui.auth;if($('fotp')!==a.otp)return authErr('Wrong code. Please try again.');a.otpShown=true;a.err='';render();}
+function renderAuth(){
+  const m0=ui.msg,b0=ui.bad; ui.msg='';
+  document.getElementById('nav').innerHTML='';
+  document.getElementById('app').innerHTML=(m0?`<div class="msg ${b0?'bad':'ok'}">${esc(m0)}</div>`:'')+authView();
+  window.scrollTo(0,0);
+}
+function go(t){ui.tab=t;ui.tenant=null;ui.edit=null;render();}
+function render(){
+  applyTheme();
+  if(!session)return renderAuth();
+  const m=ui.msg, bad=ui.bad; ui.msg='';
+  document.getElementById('nav').innerHTML=[['dash','Dashboard'],['map','Bed Map'],['tenants','Tenant Registration'],['active','Active Tenants'],['props','Property Details'],['exp','Opex'],['backup','Backup']]
+    .map(([k,l])=>`<button class="${ui.tab===k?'on':''}" onclick="go('${k}')"><span class="ti">${TAB_ICON[k]||''}</span>${l}</button>`).join('');
+  const views={dash,props,tenants,active:activeTenants,map:bedMap,exp,backup};
+  document.getElementById('app').innerHTML=(m?`<div class="msg ${bad?'bad':'ok'}">${esc(m)}</div>`:'')+views[ui.tab]();
+  window.scrollTo(0,0);
+}
+function propSelect(id,val,fn){
+  if(!db.properties.length)return '<div class="muted">Add A Property In The Property Details Tab First.</div>';
+  return `<select id="${id}" ${fn?`onchange="${fn}()"`:''}>${db.properties.map(p=>`<option value="${p.id}" ${p.id===val?'selected':''}>${esc(p.name)}</option>`).join('')}</select>`;
+}
+function pick(id){ui.prop=id;render();}
+
+/* ---------- Dashboard ---------- */
+function dash(){
+  const isAll=ui.prop==='ALL';
+  const p=isAll?null:curProp();
+  if(!isAll&&!p)return '<div class="card muted">No Properties Yet. Add One In The Property Details Tab.</div>';
+  const m=ui.month||ymd(new Date()).slice(0,7); ui.month=m;
+  const view=ui.dashView||'month';
+  const seg=`<div class="seg"><button class="${view==='month'?'on':''}" onclick="setDashView('month')">Month</button><button class="${view==='overall'?'on':''}" onclick="setDashView('overall')">Overall</button></div>`;
+  if(view==='overall')return seg+dashOverallSlicer();
+  const opts=`<option value="ALL" ${isAll?'selected':''}>All Properties</option>`+db.properties.map(x=>`<option value="${x.id}" ${!isAll&&p&&x.id===p.id?'selected':''}>${esc(x.name)}</option>`).join('');
+  const monthKeys=[...Array(12)].map((_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');});
+  const pChip=(id,label,on)=>`<button class="chip ${on?'on':''}" onclick="setMonthProp('${id}')">${esc(label)}</button>`;
+  const mChip=k=>`<button class="chip ${k===m?'on':''}" onclick="pickMonth('${k}')">${new Date(k+'-01T00:00:00').toLocaleString('en-IN',{month:'short',year:'numeric'})}</button>`;
+  const picker=`<div class="card"><label>Property</label><div class="chips">${pChip('ALL','All Properties',isAll)}${db.properties.map(x=>pChip(x.id,x.name,!isAll&&!!p&&x.id===p.id)).join('')}</div><label>Month</label><div class="chips">${monthKeys.map(mChip).join('')}</div></div>`;
+  let body;
+  if(view==='month') body=isAll?dashMonthAll(m):dashMonth(p,m);
+  else body=isAll?dashOverallAll():dashOverall(p);
+  return seg+picker+body;
+}
+function dashMonthAll(m){
+  const tot=sumMetrics(m);
+  const label=new Date(m+'-01T00:00:00').toLocaleString('en-IN',{month:'long',year:'numeric'});
+  const hero=`<div class="hero"><div class="hero-kicker">${esc(label)} · All Properties</div>
+  <div class="hero-num">${money(tot.net)}</div>
+  <div class="hero-sub">${tot.net<0?'Loss':'Profit'} for the month · Revenue ${money(tot.collected)} · Opex ${money(tot.opex)}</div></div>`;
+  return hero+opexDonut(db.properties,m)+portfolioMonth(m)+monthDuesHTML(m);
+}
+function dashOverallAll(){
+  const dues=db.tenants.filter(t=>!t.checkout).map(t=>({t,...due(t)})).filter(x=>x.due>0);
+  const list=dues.map(x=>`<div class="card row"><div><b>${esc(x.t.name)}</b><div class="muted">${esc(propOfT(x.t))} · Room ${esc(codeOfT(x.t))}</div><div class="muted">Due ${money(x.due)}</div></div><a class="s" target="_blank" href="${waLink(x.t.mobile,duesMessage(x.t))}">WhatsApp</a></div>`).join('')||'<div class="card muted">No Dues Outstanding.</div>';
+  return portfolioOverall()+`<h2>Tenants With Dues (All Properties)</h2>${list}`;
+}
+function toggleSlicer(id){
+  if(id==='CLEAR'){ui.slicer=[];}
+  else{ui.slicer=ui.slicer||[];const i=ui.slicer.indexOf(id);if(i>=0)ui.slicer.splice(i,1);else ui.slicer.push(id);}
+  render();
+}
+function scopeProps(){const sel=ui.slicer||[];return sel.length?db.properties.filter(p=>sel.includes(p.id)):db.properties;}
+function monthBreakdown(scope){
+  const starts=[];
+  scope.forEach(p=>{const tIds=propTenantIds(p);db.tenants.filter(t=>tIds.has(t.id)&&t.checkin).forEach(t=>starts.push(t.checkin.slice(0,7)));db.expenses.filter(e=>e.propId===p.id).forEach(e=>starts.push(e.date.slice(0,7)));});
+  const now=ymd(new Date()).slice(0,7);
+  let first=starts.length?starts.sort()[0]:now;
+  const [fy,fm]=first.split('-').map(Number), [ny,nm]=now.split('-').map(Number);
+  const months=[];
+  for(let y=fy,mo=fm;(y<ny||(y===ny&&mo<=nm))&&months.length<120;){months.push(y+'-'+String(mo).padStart(2,'0'));mo++;if(mo>12){mo=1;y++;}}
+  const rows=months.reverse().map(mo=>{
+    let expected=0,collected=0,opex=0,outstanding=0;
+    scope.forEach(p=>{const tIds=propTenantIds(p);const m=propMetrics(p,mo);expected+=m.expected;collected+=m.collected;opex+=m.opex;
+      db.tenants.filter(t=>tIds.has(t.id)&&billMonths(t).includes(mo)).forEach(t=>{outstanding+=Math.max(0,t.rent-paidFor(t,mo));});});
+    return {mo,expected,collected,opex,net:collected-opex,outstanding};
+  });
+  const label=mo=>new Date(mo+'-01T00:00:00').toLocaleString('en-IN',{month:'short',year:'numeric'});
+  return `<h2>Month By Month</h2><div class="card" style="overflow-x:auto"><table class="tbl">
+    <tr><th>Month</th><th>Expected</th><th>Collected</th><th>Opex</th><th>Profit / Loss</th><th>Outstanding</th></tr>
+    ${rows.map(r=>`<tr><td>${label(r.mo)}</td><td>${money(r.expected)}</td><td>${money(r.collected)}</td><td>${money(r.opex)}</td><td class="${r.net<0?'bad':'ok'}">${money(r.net)}</td><td>${money(r.outstanding)}</td></tr>`).join('')}
+  </table></div>`;
+}
+const CH_PAL=['#6366f1','#10b981','#f59e0b','#0ea5e9','#ec4899','#8b5cf6','#f43f5e','#14b8a6'];
+function sliceChart(items,kind,title){
+  const total=items.reduce((s,i)=>s+i.value,0);
+  const isPie=kind==='pie';
+  const R=isPie?35:52, SW=isPie?70:20, C=2*Math.PI*R;
+  let off=0;
+  const segs=items.map(i=>{const len=total?(i.value/total)*C:0;const s=`<circle r="${R}" cx="70" cy="70" fill="none" stroke="${i.color}" stroke-width="${SW}" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;off+=len;return s;}).join('');
+  const centre=isPie?'':`<text x="70" y="66" text-anchor="middle" font-size="11" fill="currentColor" opacity=".7">Total</text><text x="70" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">${money(total)}</text>`;
+  const legend=items.map(i=>`<div class="lg"><i style="background:${i.color}"></i>${esc(i.label)}<b>${money(i.value)}</b></div>`).join('')||'<div class="muted">No Data Yet.</div>';
+  return `<div class="card"><h2 style="margin-top:0">${esc(title)}</h2><div class="donut-wrap"><svg viewBox="0 0 140 140" width="130" height="130">${total?'':`<circle r="${R}" cx="70" cy="70" fill="none" stroke="var(--line)" stroke-width="${SW}"/>`}${segs}${centre}</svg><div class="lgs">${legend}</div></div></div>`;
+}
+function barChartHTML(data,title){
+  const W=640,H=220,floor=190,top=16,slot=W/Math.max(1,data.length),bw=Math.max(6,Math.min(16,slot*0.3));
+  const max=Math.max(1,...data.flatMap(d=>[d.a,d.b]));
+  let g='';
+  data.forEach((d,i)=>{const cx=i*slot+slot/2;
+    [[d.a,'#10b981',-(bw/2+2)],[d.b,'#f59e0b',bw/2+2]].forEach(([v,c,o])=>{const hgt=(v/max)*(floor-top);g+=`<rect x="${cx+o-bw/2}" y="${floor-hgt}" width="${bw}" height="${hgt}" rx="3" fill="${c}"/>`;});
+    g+=`<text x="${cx}" y="${H-8}" font-size="10" text-anchor="middle" fill="currentColor" opacity=".7">${esc(d.label)}</text>`;
+  });
+  return `<div class="card"><h2 style="margin-top:0">${esc(title)}</h2><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;color:var(--muted)">${g}<line x1="0" x2="${W}" y1="${floor}" y2="${floor}" stroke="var(--line)"/></svg><div class="muted" style="display:flex;gap:14px;margin-top:6px"><span><span style="color:#10b981">●</span> Collected</span><span><span style="color:#f59e0b">●</span> Opex</span></div></div>`;
+}
+function overallCharts(scope,rows){
+  const now=ymd(new Date()).slice(0,7);
+  const [ny,nm]=now.split('-').map(Number);
+  const months=[...Array(12)].map((_,i)=>{const d=new Date(ny,nm-1-(11-i),1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');});
+  const bars=months.map(mo=>{const t=scope.reduce((a,p)=>{const m=propMetrics(p,mo);return {c:a.c+m.collected,o:a.o+m.opex};},{c:0,o:0});return {label:new Date(mo+'-01T00:00:00').toLocaleString('en-IN',{month:'short'}),a:t.c,b:t.o};});
+  const pie=rows.map((r,i)=>({label:r.p.name,value:r.collected,color:CH_PAL[i%CH_PAL.length]})).filter(x=>x.value>0);
+  const cat={};const ids=scope.map(p=>p.id);
+  const nowIdx=ny*12+nm-1;
+  db.expenses.filter(e=>ids.includes(e.propId)).forEach(e=>{
+    let amt=e.amount;
+    if(e.recurring){const d=new Date(e.date+'T00:00:00');amt=e.amount*Math.max(1,nowIdx-(d.getFullYear()*12+d.getMonth())+1);}
+    cat[e.category]=(cat[e.category]||0)+amt;});
+  const donut=Object.entries(cat).sort((a,b)=>b[1]-a[1]).map((c,i)=>({label:c[0],value:c[1],color:CH_PAL[i%CH_PAL.length]}));
+  return `<h2>Charts</h2>`+barChartHTML(bars,'Collected Vs Opex (Last 12 Months)')+sliceChart(pie,'pie','Revenue Share By Property')+sliceChart(donut,'donut','Opex By Category (All Months)');
+}
+function dashOverallSlicer(){
+  const sel=ui.slicer||[];
+  const scope=scopeProps();
+  const chip=(id,label,on)=>`<button class="chip ${on?'on':''}" onclick="toggleSlicer('${id}')">${esc(label)}</button>`;
+  const slicer=`<div class="card"><label>Property Slicer (Tap To Select, All Properties To Clear)</label><div class="chips">${chip('CLEAR','All Properties',sel.length===0)}${db.properties.map(p=>chip(p.id,p.name,sel.includes(p.id))).join('')}</div></div>`;
+  const rows=scope.map(p=>{const tIds=propTenantIds(p);const ts=db.tenants.filter(t=>tIds.has(t.id));
+    const collected=db.payments.filter(x=>tIds.has(x.tenantId)).reduce((s,x)=>s+x.amount,0);
+    const expected=ts.reduce((s,t)=>s+billMonths(t).length*t.rent,0);
+    const opex=allOpexOf(p);
+    const outstanding=ts.reduce((s,t)=>s+due(t).due,0);
+    return {p,collected,expected,opex,net:collected-opex,outstanding,ts};});
+  const tot=k=>rows.reduce((s,r)=>s+r[k],0);
+  const net=tot('net');
+  const card=(l,v,neg)=>`<div class="card"><div class="muted">${l}</div><div class="stat ${neg===undefined?'':(neg?'bad':'ok')}">${money(v)}</div></div>`;
+  const scopeLabel=sel.length?scope.map(p=>p.name).join(', '):'All Properties';
+  const dues=rows.flatMap(r=>r.ts).map(t=>({t,...due(t)})).filter(x=>x.due>0);
+  return slicer+`<h2>${esc(scopeLabel)}: Overall (All Months To Date)</h2>
+  <div class="grid">${card('Total Expected Revenue',tot('expected'))}${card('Total Revenue Collected',tot('collected'))}${card('Total Opex',tot('opex'))}${card(net<0?'Overall Loss':'Overall Profit',net,net<0)}${card('Total Outstanding Dues',tot('outstanding'))}</div>`
+  +overallCharts(scope,rows)
+  +(sel.length?monthBreakdown(scope):'')
+  +`<h2>Tenants With Dues</h2>`+(dues.map(x=>`<div class="card row"><div><b>${esc(x.t.name)}</b><div class="muted">${esc(propOfT(x.t))} · Room ${esc(codeOfT(x.t))}</div><div class="muted">Due ${money(x.due)}</div></div><a class="s" target="_blank" href="${waLink(x.t.mobile,duesMessage(x.t))}">WhatsApp</a></div>`).join('')||'<div class="card muted">No Dues Outstanding.</div>');
+}
+const TAB_ICON={dash:'📊',map:'🛏️',tenants:'📝',active:'👥',props:'🏢',exp:'💸',backup:'💾'};
+function initials(n){return String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();}
+function avCol(n){const cols=['#6366f1','#10b981','#f59e0b','#0ea5e9','#ec4899','#8b5cf6','#f43f5e','#14b8a6'];let x=0;for(const c of String(n))x=(x+c.charCodeAt(0))|0;return cols[Math.abs(x)%cols.length];}
+function opexDonut(scope,m){
+  const monthEnd=m+'-31';
+  const ids=scope.map(p=>p.id);
+  const items=db.expenses.filter(e=>ids.includes(e.propId)&&(e.recurring?e.date<=monthEnd:e.date.slice(0,7)===m));
+  const byCat={};items.forEach(e=>{byCat[e.category]=(byCat[e.category]||0)+e.amount;});
+  const cats=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const total=cats.reduce((s,c)=>s+c[1],0);
+  const palette=['#6366f1','#10b981','#f59e0b','#0ea5e9','#ec4899','#8b5cf6','#f43f5e','#14b8a6'];
+  const R=52,C=2*Math.PI*R;let off=0;
+  const segs=cats.map((c,i)=>{const len=total?(c[1]/total)*C:0;const s=`<circle r="${R}" cx="70" cy="70" fill="none" stroke="${palette[i%palette.length]}" stroke-width="20" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`;off+=len;return s;}).join('');
+  const legend=cats.map((c,i)=>`<div class="lg"><i style="background:${palette[i%palette.length]}"></i>${esc(c[0])}<b>${money(c[1])}</b></div>`).join('')||'<div class="muted">No Opex recorded for this month.</div>';
+  return `<h2>Opex By Category</h2><div class="card donut-wrap"><svg viewBox="0 0 140 140" width="130" height="130"><circle r="${R}" cx="70" cy="70" fill="none" stroke="var(--line)" stroke-width="20"/>${segs}<text x="70" y="66" text-anchor="middle" font-size="11" fill="currentColor" opacity=".7">Total</text><text x="70" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">${money(total)}</text></svg><div class="lgs">${legend}</div></div>`;
+}
+function setMonthProp(id){ui.prop=id;render();}
+function setDashView(v){ui.dashView=v;render();}
+function dashMonth(p,m){
+  const beds=propBeds(p), tIds=propTenantIds(p);
+  const tenantsP=db.tenants.filter(t=>tIds.has(t.id));
+  const payMonth=x=>x.forMonth||x.date.slice(0,7);
+  const mLabel=new Date(m+'-01T00:00:00').toLocaleString('en-IN',{month:'long',year:'numeric'});
+  const collected=db.payments.filter(x=>tIds.has(x.tenantId)&&payMonth(x)===m).reduce((s,x)=>s+x.amount,0);
+  const expected=tenantsP.filter(t=>billMonths(t).includes(m)).reduce((s,t)=>s+t.rent,0);
+  const monthOutstanding=tenantsP.filter(t=>billMonths(t).includes(m)).reduce((s,t)=>s+Math.max(0,t.rent-paidFor(t,m)),0);
+  const monthEnd=m+'-31';
+  const opex=db.expenses.filter(e=>e.propId===p.id&&(e.recurring?e.date<=monthEnd:e.date.slice(0,7)===m)).reduce((s,e)=>s+e.amount,0);
+  const net=collected-opex;
+  const occupied=beds.filter(b=>activeOf(b.id)).length;
+  return `
+  <div class="hero"><div class="hero-kicker">${esc(mLabel)} · ${esc(p.name)}</div>
+  <div class="hero-num">${money(net)}</div>
+  <div class="hero-sub">${net<0?'Loss':'Profit'} for the month · Revenue ${money(collected)} · Opex ${money(opex)}</div></div>
+  <h2>${esc(mLabel)}</h2>
+  <div class="grid">
+    <div class="card"><div class="muted">Revenue (Rent Collected)</div><div class="stat">${money(collected)}</div></div>
+    <div class="card"><div class="muted">Rent Expected</div><div class="stat">${money(expected)}</div></div>
+    <div class="card"><div class="muted">Outstanding This Month</div><div class="stat">${money(monthOutstanding)}</div></div>
+    <div class="card"><div class="muted">Opex (Expenses)</div><div class="stat">${money(opex)}</div></div>
+    <div class="card"><div class="muted">${net<0?'Loss':'Profit'} For The Month</div><div class="stat ${net<0?'bad':'ok'}">${money(net)}</div></div>
+    <div class="card"><div class="muted">Occupancy</div><div class="stat">${occupied}/${beds.length} Beds</div></div>
+  </div>
+  ${miniChart('Revenue, Opex And Profit',mo=>propMetrics(p,mo))}
+  ${opexDonut([p],m)}
+  ${portfolioMonth(m)}
+  ${monthDuesHTML(m)}`;
+}
+function monthDuesHTML(m){
+  const rows=db.tenants.filter(t=>billMonths(t).includes(m)).map(t=>({t,rent:t.rent,got:paidFor(t,m)})).map(x=>({...x,due:Math.max(0,x.rent-x.got)})).filter(x=>x.due>0);
+  const total=rows.reduce((s,x)=>s+x.due,0);
+  const label=new Date(m+'-01T00:00:00').toLocaleString('en-IN',{month:'long',year:'numeric'});
+  return `<h2>Rent Dues For ${esc(label)}</h2>
+  <div class="grid">
+    <div class="card"><div class="muted">Tenants With Dues</div><div class="stat">${rows.length}</div></div>
+    <div class="card"><div class="muted">Total Due</div><div class="stat bad">${money(total)}</div></div>
+  </div>
+  ${rows.map(x=>`<div class="card row"><div><b>${esc(x.t.name)}</b><div class="muted">${esc(propOfT(x.t))} · Room ${esc(codeOfT(x.t))}</div><div class="muted">Rent ${money(x.rent)} · Received ${money(x.got)}</div><div class="muted">Due ${money(x.due)}</div></div><a class="s" target="_blank" href="${waLink(x.t.mobile,duesMessage(x.t))}">WhatsApp</a></div>`).join('')||'<div class="card muted">No Rent Dues For This Month.</div>'}`;
+}
+function dashOverall(p){
+  const tIds=propTenantIds(p);
+  const tenantsP=db.tenants.filter(t=>tIds.has(t.id));
+  const allCollected=db.payments.filter(x=>tIds.has(x.tenantId)).reduce((s,x)=>s+x.amount,0);
+  const allOpex=allOpexOf(p);
+  const allNet=allCollected-allOpex;
+  const allExpected=tenantsP.reduce((s,t)=>s+billMonths(t).length*t.rent,0);
+  const allOutstanding=tenantsP.reduce((s,t)=>s+due(t).due,0);
+  const overdue=db.tenants.filter(t=>!t.checkout).map(t=>({t,...due(t)})).filter(x=>x.due>0);
+  return `
+  <h2>${esc(p.name)}: Overall (All Months To Date)</h2>
+  <div class="grid">
+    <div class="card"><div class="muted">Total Expected Revenue</div><div class="stat">${money(allExpected)}</div></div>
+    <div class="card"><div class="muted">Total Revenue Collected</div><div class="stat">${money(allCollected)}</div></div>
+    <div class="card"><div class="muted">Total Opex</div><div class="stat">${money(allOpex)}</div></div>
+    <div class="card"><div class="muted">${allNet<0?'Overall Loss':'Overall Profit'}</div><div class="stat ${allNet<0?'bad':'ok'}">${money(allNet)}</div></div>
+    <div class="card"><div class="muted">Total Outstanding Dues</div><div class="stat">${money(allOutstanding)}</div></div>
+  </div>
+  ${portfolioOverall()}
+  <h2>Tenants With Dues (All Properties)</h2>
+  ${overdue.map(x=>`<div class="card row"><div><b>${esc(x.t.name)}</b><div class="muted">${esc(propOfT(x.t))} · Room ${esc(codeOfT(x.t))}</div><div class="muted">Due ${money(x.due)}</div></div><a class="s" target="_blank" href="${waLink(x.t.mobile,duesMessage(x.t))}">WhatsApp</a></div>`).join('')||'<div class="card muted">No Dues Outstanding.</div>'}`;
+}
+function allOpexOf(p){
+  const now=new Date(), nowIdx=now.getFullYear()*12+now.getMonth();
+  return db.expenses.filter(e=>e.propId===p.id).reduce((s,e)=>{
+    if(!e.recurring)return s+e.amount;
+    const d=new Date(e.date+'T00:00:00'), cnt=Math.max(1,nowIdx-(d.getFullYear()*12+d.getMonth())+1);
+    return s+e.amount*cnt;
+  },0);
+}
+function propMetrics(p,m){
+  const tIds=propTenantIds(p), tenantsP=db.tenants.filter(t=>tIds.has(t.id));
+  const payMonth=x=>x.forMonth||x.date.slice(0,7);
+  const collected=db.payments.filter(x=>tIds.has(x.tenantId)&&payMonth(x)===m).reduce((s,x)=>s+x.amount,0);
+  const expected=tenantsP.filter(t=>billMonths(t).includes(m)).reduce((s,t)=>s+t.rent,0);
+  const monthEnd=m+'-31';
+  const opex=db.expenses.filter(e=>e.propId===p.id&&(e.recurring?e.date<=monthEnd:e.date.slice(0,7)===m)).reduce((s,e)=>s+e.amount,0);
+  const allCollected=db.payments.filter(x=>tIds.has(x.tenantId)).reduce((s,x)=>s+x.amount,0);
+  const allOpex=allOpexOf(p);
+  const allOutstanding=tenantsP.reduce((s,t)=>s+due(t).due,0);
+  const allExpected=tenantsP.reduce((s,t)=>s+billMonths(t).length*t.rent,0);
+  return {collected,expected,opex,net:collected-opex,allCollected,allExpected,allOpex,allNet:allCollected-allOpex,allOutstanding};
+}
+function portfolioMonth(m){
+  const mLabel=new Date(m+'-01T00:00:00').toLocaleString('en-IN',{month:'long',year:'numeric'});
+  const rows=db.properties.map(p=>({p,...propMetrics(p,m)}));
+  const sum=k=>rows.reduce((s,r)=>s+r[k],0);
+  const card=(l,v,neg)=>`<div class="card"><div class="muted">${l}</div><div class="stat ${neg===undefined?'':(neg?'bad':'ok')}">${money(v)}</div></div>`;
+  const cur=sum('net');
+  return `
+  <h2>All Properties: ${esc(mLabel)}</h2>
+  <div class="grid">
+    ${card('Revenue (Rent Collected)',sum('collected'))}
+    ${card('Rent Expected',sum('expected'))}
+    ${card('Opex (Expenses)',sum('opex'))}
+    ${card(cur<0?'Loss For The Month':'Profit For The Month',cur,cur<0)}
+  </div>
+  ${miniChart('All Properties: Revenue, Opex And Profit',mo=>sumMetrics(mo))}
+  ${rows.map(r=>`<div class="card row"><div><b>${esc(r.p.name)}</b><div class="muted">Revenue ${money(r.collected)} · Opex ${money(r.opex)}</div></div><span class="stat ${r.net<0?'bad':'ok'}" style="font-size:16px">${money(r.net)}</span></div>`).join('')||'<div class="card muted">No Properties Yet.</div>'}`;
+}
+function portfolioOverall(){
+  const rows=db.properties.map(p=>({p,...propMetrics(p,ymd(new Date()).slice(0,7))}));
+  const sum=k=>rows.reduce((s,r)=>s+r[k],0);
+  const card=(l,v,neg)=>`<div class="card"><div class="muted">${l}</div><div class="stat ${neg===undefined?'':(neg?'bad':'ok')}">${money(v)}</div></div>`;
+  const all=sum('allNet');
+  return `
+  <h2>All Properties: All Months To Date</h2>
+  <div class="grid">
+    ${card('Total Expected Revenue',sum('allExpected'))}
+    ${card('Total Revenue Collected',sum('allCollected'))}
+    ${card('Total Opex',sum('allOpex'))}
+    ${card(all<0?'Overall Loss':'Overall Profit',all,all<0)}
+    ${card('Total Outstanding Dues',sum('allOutstanding'))}
+  </div>`;
+}
+function setDash(){ui.prop=$('dprop');ui.month=$('dmonth')||ui.month;render();}
+
+/* ---------- Rooms and beds ---------- */
+function props(){
+  const allBeds=db.beds.length, allOcc=db.beds.filter(b=>activeOf(b.id)).length;
+  let html=editorHTML()+`<div class="tiles"><div class="tile"><span class="tile-ic">🏢</span><div><div class="muted">Properties</div><div class="tile-v">${db.properties.length}</div></div></div><div class="tile"><span class="tile-ic">🚪</span><div><div class="muted">Beds</div><div class="tile-v">${allBeds}</div></div></div><div class="tile"><span class="tile-ic">✅</span><div><div class="muted">Occupied</div><div class="tile-v">${allOcc}</div></div></div></div><div class="card"><h2 style="margin-top:0">Properties</h2>
+  ${db.properties.map(x=>`<div class="row" style="margin:6px 0"><button class="s" onclick="pick('${x.id}')">${esc(x.name)}</button><span class="muted">${esc(x.address)}</span> <button class="s" onclick="startEdit('prop','${x.id}')">Edit</button></div>`).join('')||'<div class="muted">None Yet.</div>'}
+  <label>New Property Name</label><input id="pn"><button class="s" onclick="voice('pn')">🎙 Speak</button>
+  <label>Address</label><input id="pa"><button class="s" onclick="voice('pa')">🎙 Speak</button>
+  <button class="p" onclick="addProp()">Add Property</button></div>`;
+  const p=curProp();
+  if(!p)return html;
+  const beds=propBeds(p);
+  const rooms=[...new Set(beds.map(b=>bkey(b)))];
+  html+=`<div class="card"><h2 style="margin-top:0">Rooms in ${esc(p.name)}</h2>
+  ${rooms.map(r=>`<div style="margin-bottom:10px"><div class="row"><b>${r.split('|')[0]?esc(r.split('|')[0])+' · ':''}Room ${esc(r.split('|')[1])}</b><button class="s" onclick="startEdit('room','${jsa(r.split('|')[0])}','${jsa(r.split('|')[1])}')">Edit</button> <button class="s d" onclick="delRoom('${jsa(r.split('|')[0])}','${jsa(r.split('|')[1])}')">Remove Room</button></div>
+    ${beds.filter(b=>bkey(b)===r).map(b=>{const t=activeOf(b.id);return `<div class="row" style="margin:6px 0"><span>Bed ${esc(b.room)}${esc(b.bed)} · ${money(b.rent)}/mo</span>${t?`<span class="tag">${esc(t.name)}</span>`:'<span class="tag ok">Vacant</span>'}</div>`;}).join('')}
+  </div>`).join('')||'<div class="muted">No Rooms Yet.</div>'}
+  <h2>Add Room</h2>
+  <label>Select Property</label>
+  <select id="rprop">${db.properties.map(x=>`<option value="${x.id}" ${x.id===p.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
+  <label>Room Number</label><input id="rn"><button class="s" onclick="voice('rn')">🎙 Speak</button>
+  <label>Number Of Beds</label><input id="rb" type="number" min="1" max="5" value="1">
+  <label>Rent Per Bed Per Month (₹)</label><input id="rr" type="number" min="1">
+  <button class="p" onclick="addRoom()">Add Room</button></div>`;
+  return html;
+}
+function addProp(){
+  const name=$('pn');
+  if(!name)return fail('Property name is required.');
+  const p={id:uid(),name,address:$('pa')};
+  db.properties.push(p); ui.prop=p.id; save(); flash('Property added.'); render();
+}
+const jsa=s=>esc(String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"));
+function editProp(id,nm,ad){
+  const p=db.properties.find(x=>x.id===id);
+  if(!p)return fail('Property not found.');
+
+  if(!nm.trim())return fail('Name cannot be empty.');
+
+  p.name=nm.trim(); if(ad!==null)p.address=ad.trim();
+  save(); flash('Property updated.'); render();
+}
+function editBlock(old,nn){
+  const p=curProp();
+
+  const n=nn.trim();
+  if(!n)return fail('Property name cannot be empty.');
+  if(n===old){render();return;}
+  if(propBlocks(p).includes(n))return fail('That property name already exists.');
+  db.beds.forEach(b=>{if(b.propId===p.id&&(b.block||'')===old)b.block=n;});
+  db.blocks.forEach(x=>{if(x.propId===p.id&&x.name===old)x.name=n;});
+  if(!db.blocks.some(x=>x.propId===p.id&&x.name===n))db.blocks.push({id:uid(),propId:p.id,name:n});
+  save(); flash('Property name renamed.'); render();
+}
+function editRoom(block,room,nr){
+  const p=curProp();
+
+  const n=nr.trim();
+  if(!n)return fail('Room number cannot be empty.');
+  if(n===room){render();return;}
+  if(propBeds(p).some(b=>bkey(b)===block+'|'+n))return fail('That room already exists under this property name.');
+  db.beds.forEach(b=>{if(b.propId===p.id&&(b.block||'')===block&&b.room===room)b.room=n;});
+  save(); flash('Room renamed.'); render();
+}
+function startEdit(kind,a,b){
+  if(kind==='prop'){const p=db.properties.find(x=>x.id===a);if(!p)return fail('Property not found.');ui.edit={kind,a,name:p.name,addr:p.address||''};}
+  else if(kind==='block'){ui.edit={kind,a,name:a};}
+  else{ui.edit={kind,a,b,name:b};}
+  render();
+}
+function cancelEdit(){ui.edit=null;render();}
+function saveEdit(){
+  const e=ui.edit; if(!e)return;
+  const nm=document.getElementById('ed_name').value.trim();
+  const ea=document.getElementById('ed_addr');
+  const ad=ea?ea.value.trim():'';
+  ui.edit=null;
+  if(e.kind==='prop')editProp(e.a,nm,ad);
+  else if(e.kind==='block')editBlock(e.a,nm);
+  else editRoom(e.a,e.b,nm);
+}
+function editorHTML(){
+  const e=ui.edit; if(!e)return '';
+  const title=e.kind==='prop'?'Edit property':e.kind==='block'?'Edit property name':'Edit room number';
+  const label=e.kind==='prop'?'Property (building) name':e.kind==='block'?'Property name':'Room number';
+  return `<div class="card" style="border-color:var(--acc)"><h2 style="margin-top:0">${title}</h2>
+  <label>${label}</label><input id="ed_name" value="${esc(e.name)}">
+  ${e.kind==='prop'?`<label>Address</label><input id="ed_addr" value="${esc(e.addr)}">`:''}
+  <button class="p" onclick="saveEdit()">Save Changes</button>
+  <button class="s" onclick="cancelEdit()">Cancel</button></div>`;
+}
+function addBlock(){
+  const p=curProp();
+  const name=$('nbk');
+  if(!p)return fail('Add a property first.');
+  if(!name)return fail('Property name is required.');
+  if(propBlocks(p).includes(name))return fail('That property name already exists.');
+  db.blocks.push({id:uid(),propId:p.id,name}); save(); flash('Property name "'+name+'" added.'); render();
+}
+function delBlock(name){
+  const p=curProp();
+  if(propBeds(p).some(b=>(b.block||'')===name))return fail('A property name with rooms cannot be removed.');
+  db.blocks=db.blocks.filter(x=>!(x.propId===p.id&&x.name===name)); save(); flash('Property name removed.'); render();
+}
+function addRoom(){
+  const p=curProp();
+  if(!p)return fail('Add a property first.');
+  const p2=db.properties.find(x=>x.id===document.getElementById('rprop')?.value);
+  if(!p2)return fail('Select a property first.');
+  const block='';
+  const room=$('rn'), n=Number($('rb')), rent=Number($('rr'));
+  if(!room)return fail('Room number is required.');
+  if(!(Number.isInteger(n)&&n>=1&&n<=5))return fail('Number of beds must be between 1 and 5 (beds are named A to E).');
+  if(!(rent>0))return fail('Rent per bed must be above 0.');
+  if(propBeds(p2).some(b=>bkey(b)===block+'|'+room))return fail('That room already exists under this property name.');
+  for(let i=1;i<=n;i++)db.beds.push({id:uid(),propId:p2.id,block,room,bed:String.fromCharCode(64+i),rent});
+  ui.prop=p2.id; save(); flash(`Room ${room} added to ${p2.name} with ${n} bed(s).`); render();
+}
+function delRoom(block,room){
+  const p=curProp();
+  const ids=propBeds(p).filter(b=>bkey(b)===block+'|'+room).map(b=>b.id);
+  if(ids.some(id=>db.tenants.some(t=>t.bedId===id)))return fail('This room has tenant history, so it cannot be removed.');
+  db.beds=db.beds.filter(b=>!ids.includes(b.id)); save(); flash('Room removed.'); render();
+}
+
+/* ---------- Tenants ---------- */
+function tenants(){
+  const p=curProp();
+  if(!p)return '<div class="card muted">Add A Property In The Property Details Tab First.</div>';
+  const vacant=propBeds(p).filter(b=>!activeOf(b.id));
+  return `<div class="card"><label>Property</label>${propSelect('tprop',p.id,'setTprop')}</div><div class="tiles"><div class="tile"><span class="tile-ic">🛏️</span><div><div class="muted">Vacant Beds</div><div class="tile-v">${vacant.length}</div></div></div><div class="tile"><span class="tile-ic">👥</span><div><div class="muted">Active Tenants</div><div class="tile-v">${propBeds(p).length-vacant.length}</div></div></div></div>`+allotForm(vacant);
+}
+function activeTenants(){
+  if(ui.tenant)return tenantDetail();
+  const p=curProp();
+  if(!p)return '<div class="card muted">Add A Property In The Property Details Tab First.</div>';
+  const tIds=propTenantIds(p);
+  const active=db.tenants.filter(t=>tIds.has(t.id)&&!t.checkout);
+  return `<div class="card"><label>Property</label>${propSelect('tprop',p.id,'setTprop')}</div><h2>Active Tenants in ${esc(p.name)}</h2>
+  <div class="tenant-grid">${active.map(t=>{const d=due(t);const b=db.beds.find(x=>x.id===t.bedId);const cm=ymd(new Date()).slice(0,7);const cg=paidFor(t,cm);const cs=cg>=t.rent?'Paid':cg>0?'Partial':'Unpaid';return `<div class="card" style="cursor:pointer" onclick="openT('${t.id}')">
+    <div class="row"><span class="who"><span class="av" style="background:${avCol(t.name)}">${initials(t.name)}</span><b>${esc(t.name)}</b></span><span class="${d.due>0?'bad':'ok'}">${d.due>0?'Due '+money(d.due):'Paid up'}</span></div>
+    <div class="muted">${b?.block?'Property '+esc(b.block)+' · ':''}Room ${esc(b?.room)} · Bed ${esc(b?.bed)} · ${money(t.rent)}/mo</div>
+    <div class="muted">Check-in: ${fmtD(t.checkin)}</div><div class="muted">This Month: <span class="st st-${cs.toLowerCase()}"><i></i>${cs}</span> · tap to manage rent</div></div>`;}).join('')||'<div class="card empty">No Active Tenants Yet. Register One In Tenant Registration.</div>'}</div>`;
+}
+function allotForm(vacant){
+  if(!vacant.length)return '<div class="card muted">No Vacant Beds In This Property. Add A Room Or Check Someone Out First.</div>';
+  const keys=[...new Set(vacant.map(b=>bkey(b)))];
+  const pre=ui.preBed?vacant.find(b=>b.id===ui.preBed):null; ui.preBed=null;
+  const curK=pre?bkey(pre):keys[0];
+  const lbl=k=>{const [bl,r]=k.split('|');return (bl?esc(bl)+' · ':'')+'Room '+esc(r);};
+  return `<div class="card"><h2 style="margin-top:0">Allot A Bed</h2>
+  <label>Room</label>
+  <select id="trm" onchange="fillBeds(this.value)">
+    ${keys.map(k=>`<option value="${esc(k)}" ${k===curK?'selected':''}>${lbl(k)} · ${vacant.filter(b=>bkey(b)===k).length} vacant bed(s)</option>`).join('')}
+  </select>
+  <label>Bed</label>
+  <select id="tb" onchange="document.getElementById('tr').value=bedRent(this.value)">
+    ${vacant.filter(b=>bkey(b)===curK).map(b=>`<option value="${b.id}" ${pre&&b.id===pre.id?'selected':''}>Bed ${esc(b.room)}${esc(b.bed)} · ${money(b.rent)}/mo</option>`).join('')}
+  </select>
+  <label>Full name *</label><input id="tn"><button class="s" onclick="voice('tn')">🎙 Speak</button>
+  <label>Mobile number (10 digits) *</label><input id="tm" inputmode="numeric" maxlength="10"><button class="s" onclick="voice('tm')">🎙 Speak</button>
+  <label>Alternate Contact</label><input id="ta" inputmode="numeric"><button class="s" onclick="voice('ta')">🎙 Speak</button>
+  <label>Emergency Contact</label><input id="te"><button class="s" onclick="voice('te')">🎙 Speak</button>
+  <label>Check-in date *</label><input type="date" id="tc" value="${ymd(new Date())}">
+  <label>Notice Period (Days)</label><input type="number" id="tnp" min="0" value="30">
+  <label>Rent per month (₹) *</label><input type="number" id="tr" min="1" value="${bedRent(pre?pre.id:vacant.find(b=>bkey(b)===curK)?.id)}">
+  <label>Rent Due Day Of Month (1 To 28)</label><input type="number" id="tbd" min="1" max="28" value="1">
+  <label>Security Deposit (₹)</label><input type="number" id="tds" min="0" value="0">
+  <label>Deposit Paid So Far (₹)</label><input type="number" id="tdp" min="0" value="0">
+  <label>ID Type</label><select id="tit"><option>Aadhaar</option><option>PAN</option><option>Driving Licence</option><option>Passport</option><option>Other</option><option>None</option></select>
+  <label>ID Number (Optional, Stored Only On This Device)</label><input id="tid"><button class="s" onclick="voice('tid')">🎙 Speak</button>
+  <button class="p" onclick="allot()">Save Tenant</button></div>`;
+}
+function bedMap(){
+  const p=curProp();
+  if(!p)return '<div class="card muted">No Properties Yet. Add One In The Property Details Tab.</div>';
+  const beds=propBeds(p);
+  const total=beds.length, occ=beds.filter(b=>activeOf(b.id)).length, free=total-occ;
+  const pct=total?Math.round(occ/total*100):0;
+  const keys=[...new Set(beds.map(b=>bkey(b)))];
+  const ms=(l,v,c)=>`<div class="ms"><div class="ms-l">${l}</div><div class="ms-v" style="${c?'color:'+c:''}">${v}</div></div>`;
+  return `<div class="page-head"><h1 class="page-h">Bed Map</h1><div class="muted">Live occupancy across every room</div></div>
+  <div class="map-top"><div class="card"><label>Property</label>${propSelect('mprop',p.id,'setMap')}</div>
+  <div class="card map-hero">
+    <div class="row"><div><div class="hero-kicker">Occupancy · ${esc(p.name)}</div><div class="hero-num map-pct">${pct}%</div></div>
+    <div style="text-align:right"><div class="muted">Total beds</div><div class="map-total">${total}</div></div></div>
+    <div class="bar"><span style="width:${pct}%"></span></div>
+    <div class="ms-row">${ms('Booked',occ,'#16a34a')}${ms('Vacant',free,'#4f46e5')}${ms('Rooms',keys.length)}</div>
+  </div></div>
+  <div class="legend"><span><i class="sw sw-v"></i>Vacant</span><span><i class="sw sw-b"></i>Booked</span><span class="muted" style="margin-left:auto">Tap a vacant seat to book</span></div>
+  ${keys.map(k=>{const [bl,r]=k.split('|');const rb=beds.filter(b=>bkey(b)===k);const fr=rb.filter(b=>!activeOf(b.id)).length;
+    return `<div class="card room-card"><div class="row"><div><div class="room-title">${bl?esc(bl)+' · ':''}Room ${esc(r)}</div><div class="muted">${rb.length} bed${rb.length>1?'s':''}</div></div><span class="pill ${fr?'pill-free':'pill-full'}">${fr?fr+' vacant':'Full'}</span></div>
+    <div class="seats">${rb.map(b=>{const t=activeOf(b.id);return t?`<button onclick="openMapBooked('${t.id}')" class="seat seat-b"><span class="seat-code">${esc(r)}${esc(b.bed)}</span><span class="seat-name">${esc(t.name)}</span></button>`:`<button onclick="bookBed('${b.id}')" class="seat seat-v"><span class="seat-code">${esc(r)}${esc(b.bed)}</span><span class="seat-name">Vacant</span></button>`;}).join('')}</div></div>`;}).join('')||'<div class="card muted">No Rooms Yet.</div>'}`;
+}
+function setMap(){ui.prop=$('mprop');ui.tenant=null;render();}
+function bookBed(id){const b=db.beds.find(x=>x.id===id);if(!b)return;ui.prop=b.propId;ui.preBed=id;ui.tab='tenants';ui.tenant=null;render();}
+function openMapBooked(tid){ui.tab='active';ui.tenant=tid;render();}
+function allot(){
+  const errs=[];
+  const bedId=$('tb');
+  if(!$('tn'))errs.push('Name is required.');
+  if(!/^\d{10}$/.test($('tm')))errs.push('Mobile must be 10 digits.');
+  if(!$('tc'))errs.push('Check-in date is required.');
+  if(!(Number($('tr'))>0))errs.push('Rent must be above 0.');
+  const day=Number($('tbd'));
+  if(!(Number.isInteger(day)&&day>=1&&day<=28))errs.push('Rent due day must be between 1 and 28.');
+  if(!bedId||activeOf(bedId))errs.push('Choose a vacant bed.');
+  if(errs.length)return fail(errs.join(' '));
+  const t={id:uid(),bedId,name:$('tn'),mobile:$('tm'),altContact:$('ta'),emergency:$('te'),
+    checkin:$('tc'),noticeDays:Number($('tnp'))||0,rent:Number($('tr')),billDay:day,
+    depositAmt:Number($('tds'))||0,depositPaid:Number($('tdp'))||0,
+    idType:$('tit'),idNo:$('tid'),checkout:null,refund:0,deductions:0,deductReason:''};
+  db.tenants.push(t); save(); flash('Tenant allotted.'); render();
+}
+function fillBeds(key){
+  const p=curProp();
+  const bedsIn=propBeds(p).filter(b=>bkey(b)===key&&!activeOf(b.id));
+  document.getElementById('tb').innerHTML=bedsIn.map(b=>`<option value="${b.id}">Bed ${esc(b.room)}${esc(b.bed)} · ${money(b.rent)}/mo</option>`).join('');
+  document.getElementById('tr').value=bedsIn[0]?bedRent(bedsIn[0].id):'';
+}
+function setTprop(){ui.prop=$('tprop');ui.tenant=null;render();}
+function fmtD(s){const d=new Date(s+'T00:00:00');return isNaN(d)?'':d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}
+function billMonths(t){
+  if(!t.checkin)return[];
+  const ci=new Date(t.checkin+'T00:00:00');
+  const end=t.checkout?new Date(t.checkout+'T00:00:00'):new Date();
+  const out=[];let y=ci.getFullYear(),m=ci.getMonth();
+  const ey=end.getFullYear(),em=end.getMonth();
+  while(y<ey||(y===ey&&m<em)||(y===ey&&m===em&&end.getDate()>=t.billDay)){
+    out.push(y+'-'+String(m+1).padStart(2,'0'));
+    m++;if(m>11){m=0;y++;}
+  }
+  return out;
+}
+function paidFor(t,mo){return db.payments.filter(p=>p.tenantId===t.id&&(p.forMonth||p.date.slice(0,7))===mo).reduce((s,p)=>s+p.amount,0);}
+function rentRows(t){
+  const months=billMonths(t).reverse();
+  return months.map(mo=>{
+    const exp=t.rent, got=paidFor(t,mo);
+    const st=got>=exp?'Paid':got>0?'Partial':'Unpaid';
+    const label=new Date(mo+'-01T00:00:00').toLocaleString('en-IN',{month:'short',year:'numeric'});
+    const paidBtn=`<button class="s" onclick="markPaid('${t.id}','${mo}')">Mark paid</button>`;
+    const unpaidBtn=`<button class="s d" onclick="markUnpaid('${t.id}','${mo}')">Mark unpaid</button>`;
+    const actions=st==='Unpaid'?paidBtn:st==='Partial'?paidBtn+' '+unpaidBtn:unpaidBtn;
+    return `<div class="card row"><div><b>${label}</b><div class="muted">Rent ${money(exp)} · Received ${money(got)}</div></div>
+      <div><span class="st st-${st.toLowerCase()}"><i></i>${st}</span> ${actions}</div></div>`;
+  }).join('')||'<div class="muted">No rent due yet.</div>';
+}
+function markPaid(tid,mo){
+  const t=db.tenants.find(x=>x.id===tid);
+  if(!t)return fail('Tenant not found.');
+  const rem=t.rent-paidFor(t,mo);
+  if(rem<=0)return fail('This month is already fully paid.');
+  db.payments.push({id:uid(),tenantId:tid,amount:rem,date:ymd(new Date()),mode:'Marked paid',forMonth:mo});
+  save(); flash('Rent for '+mo+' marked paid ('+money(rem)+').'); render();
+}
+function armed(key){if(ui.armed===key){ui.armed=null;return true;}ui.armed=key;flash('Tap the same button again to confirm.',true);render();return false;}
+function markUnpaid(tid,mo){
+  const t=db.tenants.find(x=>x.id===tid);
+  if(!t)return fail('Tenant not found.');
+  if(!armed('u|'+tid+'|'+mo))return;
+  db.payments=db.payments.filter(p=>!(p.tenantId===tid&&(p.forMonth||p.date.slice(0,7))===mo));
+  save(); flash('Rent for '+mo+' marked unpaid.'); render();
+}
+function delPay(id){
+  if(!armed('p|'+id))return;
+  db.payments=db.payments.filter(p=>p.id!==id); save(); flash('Payment deleted.'); render();
+}
+function openT(id){ui.tenant=id;render();}
+function closeT(){ui.tenant=null;render();}
+function tenantDetail(){
+  const t=db.tenants.find(x=>x.id===ui.tenant);
+  if(!t){ui.tenant=null;return tenants();}
+  const b=db.beds.find(x=>x.id===t.bedId);
+  const d=due(t);
+  const pays=db.payments.filter(p=>p.tenantId===t.id).sort((a,c)=>c.date.localeCompare(a.date));
+  return `<button class="s" onclick="closeT()">← Back</button>
+  <div class="card"><div class="who big"><span class="av xl" style="background:${avCol(t.name)}">${initials(t.name)}</span><div><div class="det-name">${esc(t.name)}</div><div class="muted">${esc(propOfT(t))} · Room ${esc(codeOfT(t))}</div></div></div>
+    <div class="muted">Mobile ${esc(t.mobile)} · Alternate ${esc(t.altContact)||'-'} · Emergency ${esc(t.emergency)||'-'}</div>
+    <div class="muted">${b?.block?'Property '+esc(b.block)+' · ':''}Room ${esc(b?.room)} · Bed ${esc(b?.bed)} · Check-in ${fmtD(t.checkin)} · Notice ${t.noticeDays} days</div>
+    <div class="muted">${esc(t.idType)}${t.idNo?' · '+esc(t.idNo):''}</div>
+    <div class="muted">Rent ${money(t.rent)}/mo, due on day ${t.billDay} · Deposit ${money(t.depositAmt)}, paid ${money(t.depositPaid)}</div>
+    <div class="stat ${d.due>0?'bad':'ok'}" style="margin-top:8px">${d.due>0?'Due '+money(d.due):'Paid up'}</div>
+    <div class="muted">Expected ${money(d.expected)} · Received ${money(d.paid)}</div>
+    ${d.due>0&&t.mobile?`<a class="s" target="_blank" href="${waLink(t.mobile,duesMessage(t))}">Send WhatsApp Reminder</a>`:''}
+  </div>
+  <div class="card"><h2 style="margin-top:0">Rent Status</h2>
+  ${rentRows(t)}</div>
+  ${t.checkout?`<div class="card">Checked out ${esc(t.checkout)} · Refund ${money(t.refund)}${t.deductions?` · Deducted ${money(t.deductions)} (${esc(t.deductReason)})`:''}</div>`:`
+  <div class="card"><h2 style="margin-top:0">Check Out</h2>
+    <label>Checkout Date</label><input type="date" id="cod" value="${ymd(new Date())}">
+    <label>Deposit Deduction (₹)</label><input type="number" id="cdd" min="0" value="0">
+    <label>Deduction Reason</label><input id="cdr" placeholder="e.g. wall damage">
+    <div class="muted">Refund = deposit paid minus deduction.</div>
+    <button class="p d" onclick="checkout('${t.id}')">Check Out Tenant</button></div>`}
+  <h2>Payments</h2>
+  ${pays.map(p=>`<div class="card row"><span>${esc(p.date)} · ${esc(p.mode)}${p.forMonth?' · for '+p.forMonth:''}</span><span><b>${money(p.amount)}</b> <button class="s d" onclick="delPay('${p.id}')">Delete</button></span></div>`).join('')||'<div class="muted">No Payments Yet.</div>'}
+  <button class="s d" onclick="delT('${t.id}')">Delete This Tenant Record</button>`;
+}
+function checkout(id){
+  const t=db.tenants.find(x=>x.id===id);
+  const ded=Number($('cdd'))||0;
+  if(!$('cod'))return fail('Checkout date is required.');
+  if(ded<0||ded>t.depositPaid)return fail('Deduction must be between 0 and the deposit paid.');
+  t.checkout=$('cod'); t.deductions=ded; t.deductReason=$('cdr'); t.refund=t.depositPaid-ded;
+  save(); flash('Tenant checked out. Bed is now vacant.'); render();
+}
+function delT(id){
+  if(!armed('t|'+id))return;
+  db.tenants=db.tenants.filter(t=>t.id!==id);
+  db.payments=db.payments.filter(p=>p.tenantId!==id);
+  ui.tenant=null; save(); flash('Tenant deleted.'); render();
+}
+
+/* ---------- Expenses ---------- */
+function exp(){
+  const p=curProp();
+  if(!p)return '<div class="card muted">Add A Property In The Property Details Tab First.</div>';
+  const list=db.expenses.filter(e=>e.propId===p.id).sort((a,b)=>b.date.localeCompare(a.date));
+  return `<div class="card"><label>Property</label>${propSelect('xprop',p.id,'setExp')}</div><h2 style="margin-top:0">Opex · ${esc(p.name)}</h2><div class="tiles"><div class="tile"><span class="tile-ic">💸</span><div><div class="muted">Entries</div><div class="tile-v">${db.expenses.filter(e=>e.propId===p.id).length}</div></div></div><div class="tile"><span class="tile-ic">₹</span><div><div class="muted">Total Recorded</div><div class="tile-v">${money(db.expenses.filter(e=>e.propId===p.id).reduce((s,e)=>s+e.amount,0))}</div></div></div></div><div class="card"><h2 style="margin-top:0">Add Expense</h2>
+    <label>Category</label><select id="ec">${CATS.map(c=>`<option>${c}</option>`).join('')}</select>
+    <label>Date</label><input type="date" id="ed" value="${ymd(new Date())}">
+    <label>Amount (₹)</label><input type="number" id="ea" min="1">
+    <label>Notes</label><input id="en" placeholder="e.g. June electricity bill"><button class="s" onclick="voice('en')">🎙 Speak</button>
+    <label><input type="checkbox" id="er" style="width:auto"> Recurring monthly bill (counts every month from this date)</label>
+    <button class="p" onclick="addExp()">Save Expense</button></div>
+  ${list.map(e=>`<div class="card row"><div><b>${esc(e.category)}</b>${e.recurring?' <span class="tag">Monthly</span>':''}<div class="muted">${esc(e.date)} · ${esc(e.notes)}</div></div>
+    <div><b>${money(e.amount)}</b> <button class="s d" onclick="delE('${e.id}')">Delete</button></div></div>`).join('')||'<div class="muted">No Expenses Yet.</div>'}`;
+}
+function addExp(){
+  const p=curProp();
+  if(!p)return fail('Add a property first.');
+  const amt=Number($('ea'));
+  if(!(amt>0))return fail('Amount must be above 0.');
+  db.expenses.push({id:uid(),propId:p.id,category:$('ec'),date:$('ed')||ymd(new Date()),amount:amt,notes:$('en'),recurring:document.getElementById('er').checked});
+  save(); flash('Expense saved.'); render();
+}
+function delE(id){db.expenses=db.expenses.filter(e=>e.id!==id);save();flash('Expense deleted.');render();}
+
+/* ---------- Backup ---------- */
+function backup(){
+  return `<div class="tiles"><div class="tile"><span class="tile-ic">💾</span><div><div class="muted">Stored On This Device</div><div class="tile-v">${db.tenants.length} Tenants</div></div></div></div><div class="card"><h2 style="margin-top:0">Backup</h2>
+    <div class="muted">All Data Is Stored Only In This Browser On This Device. Export A Backup Regularly, And Before Clearing Browser Data.</div>
+    <button class="p" onclick="exportData()">Export Backup File</button>
+    <label style="margin-top:14px">Restore From A Backup File (Replaces Current Data)</label>
+    <input type="file" accept="application/json" onchange="importData(this.files[0])"></div>
+  <div class="card"><h2 style="margin-top:0">Account</h2><div class="muted">Signed in as ${esc((currentUser()||{}).name||"")}${currentUser()?" ("+esc(currentUser().email||currentUser().mobile)+")":""}</div><button class="s d" onclick="signOut()">Sign Out</button></div>
+  <div class="card"><h2 style="margin-top:0">Appearance</h2>
+    <label>Accent Colour</label>
+    <div class="row" style="justify-content:flex-start;gap:10px">${ACCENTS.map((a,i)=>`<button onclick="setAccent(${i})" title="Colour ${i+1}" style="width:36px;height:36px;border-radius:50%;border:${(db.settings.accent||0)===i?'3px solid var(--ink)':'2px solid var(--line)'};background:linear-gradient(135deg,${a[0]},${a[1]});cursor:pointer"></button>`).join('')}</div>
+    <label>Background</label>
+    <div class="row" style="justify-content:flex-start;gap:8px">${['system','light','dark'].map(md=>`<button class="s" onclick="setMode('${md}')" style="${(db.settings.mode||'system')===md?'border-color:var(--acc);color:var(--acc)':''}">${md[0].toUpperCase()+md.slice(1)}</button>`).join('')}</div>
+    <label>Background Style</label>
+    <div class="row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap">${BGS.map((b,i)=>`<button onclick="setBg(${i})" title="${b[0]}" style="width:52px;height:36px;border-radius:10px;border:${(db.settings.bg||0)===i?'3px solid var(--ink)':'1px solid var(--line)'};background:${b[1]};cursor:pointer"></button>`).join('')}</div>
+    <div class="muted" style="margin-top:6px">${BGS.map(b=>b[0]).join(' · ')}</div>
+    <label>Card Colour (Text Adjusts Automatically)</label>
+    <div class="row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap">${CARDS.map((c,i)=>`<button onclick="setCard(${i})" title="${c[0]}" style="width:44px;height:36px;border-radius:10px;border:${(db.settings.card||0)===i?'3px solid var(--acc)':'1px solid var(--line)'};background:${c[1]||'var(--card)'};cursor:pointer;color:${c[2]||'var(--ink)'};font-size:10px;font-weight:700">Aa</button>`).join('')}</div>
+    <div class="muted" style="margin-top:6px">${CARDS.map(c=>c[0]).join(' · ')}</div>
+    <label>Title Bar Colour</label>
+    <div class="row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap">${HDRS.map((c,i)=>`<button onclick="setHdr(${i})" title="${c[0]}" style="width:52px;height:30px;border-radius:10px;border:${(db.settings.hdr||0)===i?'3px solid var(--ink)':'1px solid var(--line)'};background:${c[1]};cursor:pointer"></button>`).join('')}</div>
+    <div class="muted" style="margin-top:6px">${HDRS.map(c=>c[0]).join(' · ')}</div>
+  </div>
+  <div class="card"><h2 style="margin-top:0">Payment QR</h2>
+    <label>Google Pay QR Image Link</label>
+    <input id="qrl" value="${esc(db.settings.qrUrl||'')}" placeholder="https://...">
+    <button class="s" onclick="setQr()">Save QR Link</button>
+    <div class="muted">Paste a public link to your Google Pay QR image. It is added to every dues message.</div>
+  </div>
+  <div class="card"><h2 style="margin-top:0">Erase Data</h2>
+    ${ui.wipe?`<label>${db.settings.pass?'Enter Passcode':'Set A 6-Digit Passcode'}</label>
+      <input id="wpc" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6 digits">
+      <button class="p d" onclick="wipeAction()">${db.settings.pass?'Erase All Data':'Save Passcode'}</button>
+      <button class="s" onclick="ui.wipe=false;render()">Cancel</button>`
+     :`<button class="s d" onclick="startWipe()">Erase All Data On This Device</button>`}
+    ${db.settings.pass?(ui.pwMode==='change'?`<label>Current Passcode</label><input id="pwold" type="password" inputmode="numeric" maxlength="6"><label>New 6-Digit Passcode</label><input id="pwnew" type="password" inputmode="numeric" maxlength="6"><button class="p" onclick="changePass()">Save New Passcode</button><button class="s" onclick="ui.pwMode=null;render()">Cancel</button>`:`<div class="muted" style="margin-top:10px">Passcode is set.</div><button class="s" onclick="startChangePass()">Change Passcode</button> <button class="s d" onclick="resetPass()">Forgot Passcode? Remove It</button>`):''}
+  </div>`;
+}
+async function exportData(){
+  const name='pg-guru-backup-'+ymd(new Date())+'.json';
+  const json=JSON.stringify(db,null,2);
+  let dl=null;
+  try{dl=window.claude?await window.claude.use('downloads'):null;}catch(err){dl=null;}
+  if(!dl){flash('Backup saving is not available in this view. Open the app from its own link to export a backup.',true);render();return;}
+  try{
+    await dl.save({filename:name,data:json});
+    flash('Backup saved.');
+  }catch(err){
+    flash(err&&err.code==='declined'?'Backup cancelled.':'Could not save the backup in this view. Try again later.',true);
+  }
+  render();
+}
+function importData(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    let d;
+    try{d=JSON.parse(r.result);}catch(e){return fail('That file is not a valid backup.');}
+    const ok=['properties','beds','tenants','payments','expenses'].every(k=>Array.isArray(d[k]));
+    if(!ok)return fail('That file is not a valid backup.');
+    if(!confirm('Replace all current data with this backup?'))return;
+    db=Object.assign({},EMPTY,d); normBeds(); save(); flash('Backup restored.'); render();
+  };
+  r.readAsText(file);
+}
+
+render();
+</script>
+</body>
+</html>
