@@ -6,6 +6,8 @@
 <title>PG Guru</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
 :root{--bg:#f4f6fb;--card:#ffffff;--ink:#0f172a;--muted:#64748b;--acc:#4f46e5;--acc2:#7c3aed;--ok:#059669;--bad:#dc2626;--line:#e2e8f0;--shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.06);color-scheme:light}
 @media (prefers-color-scheme: dark){:root:not([data-theme=light]){--bg:#0b1020;--card:#131a2e;--ink:#e6ebf5;--muted:#8b97b0;--line:#222c45;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);color-scheme:dark}}
@@ -345,6 +347,8 @@ nav button.on .ti{transform:translateY(-1px)}
 </div><nav id="nav"></nav>
 <main id="app"></main>
 <script>
+const FB_CONFIG={apiKey:"AIzaSyBbw7XSay9lNxBb0JPmjacSpsS7GH-4KCc",authDomain:"pg-guru-87dc8.firebaseapp.com",projectId:"pg-guru-87dc8",storageBucket:"pg-guru-87dc8.firebasestorage.app",messagingSenderId:"855473513708",appId:"1:855473513708:web:cb3b192a3dc5ffe10c71c9"};
+const fbAuth=window.firebase?(firebase.initializeApp(FB_CONFIG),firebase.auth()):null;
 const KEY='pgmanager.v1';
 const CATS=['Electricity','Wi-Fi','Water','Cleaning','Electrician','Maintenance','Miscellaneous'];
 const EMPTY={properties:[],beds:[],tenants:[],payments:[],expenses:[],blocks:[],settings:{}};
@@ -537,13 +541,23 @@ function authErr(t){ui.auth.err=t;render();}
 function authGo(view){ui.auth={view,method:null,step:1,otp:null,err:''};render();}
 function chooseMethod(m){ui.auth.method=m;ui.auth.step=1;ui.auth.err='';render();}
 function signIn(id){const u=users.find(x=>x.id===id);session=id;localStorage.setItem(SESS_KEY,id);ui.auth={view:'landing'};ui.tab='dash';flash('Welcome, '+(u?u.name:'')+'.');render();}
-function signOut(){session=null;localStorage.removeItem(SESS_KEY);ui.tab='dash';flash('Signed out.');render();}
+async function signOut(){if(fbAuth){try{await fbAuth.signOut();}catch(e){}}session=null;localStorage.removeItem(SESS_KEY);ui.tab='dash';flash('Signed out.');render();}
+function isEmail(s){return /^\S+@\S+\.\S+$/.test(String(s||''));}
+function fbMsg(e){
+  const m={'auth/email-already-in-use':'An account already exists with this email. Please sign in.','auth/invalid-email':'Enter a valid email address.','auth/weak-password':'Password must be at least 6 characters.','auth/wrong-password':'Wrong password.','auth/invalid-credential':'Wrong email or password.','auth/user-not-found':'No account found for this email.','auth/too-many-requests':'Too many attempts. Please wait a few minutes and try again.','auth/network-request-failed':'Network problem. Check your connection and try again.'};
+  return m[e.code]||('Something went wrong: '+(e.message||e.code));
+}
+function localUpsert(fu){
+  let u=users.find(x=>x.id===fu.uid);
+  if(!u){u={id:fu.uid,name:fu.displayName||fu.email,email:(fu.email||'').toLowerCase(),mobile:'',method:'google',pass:'',created:new Date().toISOString()};users.push(u);saveUsers();}
+  return u;
+}
+/* Mobile sign-up: demo code (SMS needs the Blaze plan) */
 function sendSignupCode(){
   const a=ui.auth, name=$('sn'), idv=$('sid');
   if(!name)return authErr('Enter your name.');
-  if(a.method==='google'&&!/^\S+@\S+\.\S+$/.test(idv))return authErr('Enter your Google account email.');
-  if(a.method==='mobile'&&normMobile(idv).length!==10)return authErr('Enter a valid 10-digit mobile number.');
-  if(findUser(idv))return authErr('An account already exists with this email or mobile. Please sign in.');
+  if(normMobile(idv).length!==10)return authErr('Enter a valid 10-digit mobile number.');
+  if(findUser(idv))return authErr('An account already exists with this mobile. Please sign in.');
   a.name=name; a.idv=idv; a.otp=otpCode(); a.step=2; a.err=''; render();
 }
 function verifySignupCode(){
@@ -555,21 +569,62 @@ function createAccount(){
   const a=ui.auth, pw=$('spw'), pw2=$('spw2');
   if(pw.length<6)return authErr('Password must be at least 6 characters.');
   if(pw!==pw2)return authErr('Passwords do not match.');
-  const u={id:uid(),name:a.name,email:a.method==='google'?a.idv.toLowerCase():'',mobile:a.method==='mobile'?normMobile(a.idv):'',method:a.method,pass:hash(pw),created:new Date().toISOString()};
+  const u={id:uid(),name:a.name,email:'',mobile:normMobile(a.idv),method:'mobile',pass:hash(pw),created:new Date().toISOString()};
   users.push(u); saveUsers(); signIn(u.id);
 }
-function doSignIn(){
-  const e=$('aemail'), mo=$('amob'), pw=$('apass');
-  const u=findUser(e||mo);
-  if(!u)return authErr('No account found for this email or mobile number.');
+/* Email sign-up: Firebase creates the account and emails a verification link */
+async function createGoogleAccount(){
+  const name=$('sn'), em=$('sid').toLowerCase(), pw=$('spw'), pw2=$('spw2');
+  if(!name)return authErr('Enter your name.');
+  if(!isEmail(em))return authErr('Enter a valid email address.');
+  if(pw.length<6)return authErr('Password must be at least 6 characters.');
+  if(pw!==pw2)return authErr('Passwords do not match.');
+  if(!fbAuth)return authErr('Firebase is not connected.');
+  try{
+    const cred=await fbAuth.createUserWithEmailAndPassword(em,pw);
+    await cred.user.updateProfile({displayName:name});
+    await cred.user.sendEmailVerification();
+    await fbAuth.signOut();
+    ui.auth={view:'signin'};
+    flash('Account created. We sent a verification email to '+em+'. Open it, then sign in.');
+    render();
+  }catch(err){authErr(fbMsg(err));}
+}
+/* Sign in: email uses Firebase; mobile uses the local demo accounts */
+async function doSignIn(){
+  const em=$('aemail').toLowerCase(), mo=$('amob'), pw=$('apass');
   if(!pw)return authErr('Enter your password.');
-  if(hash(pw)!==u.pass)return authErr('Wrong password.');
+  if(em){
+    if(!isEmail(em))return authErr('Enter a valid email address.');
+    if(!fbAuth)return authErr('Firebase is not connected.');
+    try{
+      const cred=await fbAuth.signInWithEmailAndPassword(em,pw);
+      if(!cred.user.emailVerified){await fbAuth.signOut();return authErr('Please verify your email first. Check your inbox, then sign in again.');}
+      const u=localUpsert(cred.user); signIn(u.id);
+    }catch(err){authErr(fbMsg(err));}
+    return;
+  }
+  const u=findUser(mo);
+  if(!u)return authErr('No account found for this mobile number.');
+  if(!u.pass||hash(pw)!==u.pass)return authErr('Wrong password.');
   signIn(u.id);
 }
-function fpSend(){
-  const a=ui.auth, u=findUser($('fid'));
-  if(!u)return authErr('No account found for this email or mobile number.');
-  a.target=u.id; a.otp=otpCode(); a.step=2; a.err=''; render();
+/* Forgot password: email gets a Firebase reset link; mobile uses the demo code */
+async function fpSend(){
+  const id=$('fid').toLowerCase();
+  if(isEmail(id)){
+    if(!fbAuth)return authErr('Firebase is not connected.');
+    try{
+      await fbAuth.sendPasswordResetEmail(id);
+      ui.auth={view:'signin'};
+      flash('If an account exists for '+id+', a reset link has been sent. Open it to set a new password.');
+      render();
+    }catch(err){authErr(fbMsg(err));}
+    return;
+  }
+  const u=findUser(id);
+  if(!u)return authErr('No account found for this mobile number.');
+  const a=ui.auth; a.target=u.id; a.otp=otpCode(); a.step=2; a.err=''; render();
 }
 function fpReset(){
   const a=ui.auth, pw=$('fpw'), pw2=$('fpw2');
@@ -584,6 +639,7 @@ function fiSend(){
   if(!u)return authErr('No account found for this mobile number.');
   a.target=u.id; a.otp=otpCode(); a.step=2; a.err=''; render();
 }
+function fiShow(){const a=ui.auth;if($('fotp')!==a.otp)return authErr('Wrong code. Please try again.');a.otpShown=true;a.err='';render();}
 function authView(){
   const a=ui.auth||(ui.auth={view:'landing',step:1});
   const back=`<button class="s" style="width:100%;margin-top:8px" onclick="authGo('landing')">Back</button>`;
@@ -599,14 +655,21 @@ function authView(){
       body=`<div class="card"><h2 style="margin-top:0">Create Account</h2><div class="muted">Choose how you want to sign up</div>
         <button class="p" onclick="chooseMethod('google')">Continue With Google</button>
         <button class="s" style="width:100%;margin-top:8px" onclick="chooseMethod('mobile')">Sign Up With Mobile Number</button>${back}</div>`;
+    } else if(a.method==='google'){
+      body=`<div class="card"><h2 style="margin-top:0">Sign Up With Email</h2>${errBox}
+        <label>Full Name</label><input id="sn" value="${esc(a.name||'')}">
+        <label>Google Account Email</label><input id="sid" type="email" placeholder="you@gmail.com">
+        <label>Create Password (6+ characters)</label><input id="spw" type="password">
+        <label>Confirm Password</label><input id="spw2" type="password">
+        <button class="p" onclick="createGoogleAccount()">Create Account</button>
+        <div class="muted" style="margin-top:8px">We will email a verification link to this address.</div>
+        <button class="s" style="width:100%;margin-top:8px" onclick="ui.auth.method=null;render()">Change Sign Up Method</button>${back}</div>`;
     } else {
-      const g=a.method==='google';
-      const idField=g?`<label>Google Account Email</label><input id="sid" type="email" value="${esc(a.idv||'')}" placeholder="you@gmail.com">`:`<label>Mobile Number</label><input id="sid" inputmode="numeric" maxlength="10" value="${esc(a.idv||'')}" placeholder="10-digit mobile">`;
       let inner='';
-      if(a.step===1) inner=`<label>Full Name</label><input id="sn" value="${esc(a.name||'')}">${idField}<button class="p" onclick="sendSignupCode()">Send Verification Code</button>`;
-      else if(a.step===2) inner=`<div class="muted">Enter the code sent to ${g?esc(a.idv):maskMobile(normMobile(a.idv))}</div>${demoCode(a.otp)}<label>Verification Code</label><input id="sotp" inputmode="numeric" maxlength="6"><button class="p" onclick="verifySignupCode()">Verify</button>`;
+      if(a.step===1) inner=`<label>Full Name</label><input id="sn" value="${esc(a.name||'')}"><label>Mobile Number</label><input id="sid" inputmode="numeric" maxlength="10" value="${esc(a.idv||'')}" placeholder="10-digit mobile"><button class="p" onclick="sendSignupCode()">Send Verification Code</button>`;
+      else if(a.step===2) inner=`<div class="muted">Enter the code sent to ${maskMobile(normMobile(a.idv))}</div>${demoCode(a.otp)}<label>Verification Code</label><input id="sotp" inputmode="numeric" maxlength="6"><button class="p" onclick="verifySignupCode()">Verify</button>`;
       else inner=`<label>Create Password (6+ characters)</label><input id="spw" type="password"><label>Confirm Password</label><input id="spw2" type="password"><button class="p" onclick="createAccount()">Create Account</button>`;
-      body=`<div class="card"><h2 style="margin-top:0">${g?'Sign Up With Google':'Sign Up With Mobile'}</h2>${errBox}${inner}<button class="s" style="width:100%;margin-top:8px" onclick="chooseMethod(null);ui.auth.method=null;render()">Change Sign Up Method</button>${back}</div>`;
+      body=`<div class="card"><h2 style="margin-top:0">Sign Up With Mobile</h2>${errBox}${inner}<button class="s" style="width:100%;margin-top:8px" onclick="ui.auth.method=null;render()">Change Sign Up Method</button>${back}</div>`;
     }
   }
   else if(a.view==='signin'){
@@ -620,7 +683,7 @@ function authView(){
   }
   else if(a.view==='forgotPass'){
     body=`<div class="card"><h2 style="margin-top:0">Forgot Password</h2>${errBox}`+(a.step===1?
-      `<label>Google Account Email Or Mobile Number</label><input id="fid" placeholder="email or mobile"><button class="p" onclick="fpSend()">Send Code</button>`:
+      `<label>Google Account Email Or Mobile Number</label><input id="fid" placeholder="email or mobile"><button class="p" onclick="fpSend()">Send Reset</button><div class="muted" style="margin-top:8px">Email accounts receive a reset link. Mobile accounts receive a code.</div>`:
       `<div class="muted">Enter the code sent to your registered contact.</div>${demoCode(a.otp)}<label>Verification Code</label><input id="fotp" inputmode="numeric" maxlength="6"><label>New Password (6+ characters)</label><input id="fpw" type="password"><label>Confirm New Password</label><input id="fpw2" type="password"><button class="p" onclick="fpReset()">Reset Password</button>`)+`${back}</div>`;
   }
   else if(a.view==='forgotId'){
@@ -632,7 +695,6 @@ function authView(){
   }
   return hero+body;
 }
-function fiShow(){const a=ui.auth;if($('fotp')!==a.otp)return authErr('Wrong code. Please try again.');a.otpShown=true;a.err='';render();}
 function renderAuth(){
   const m0=ui.msg,b0=ui.bad; ui.msg='';
   document.getElementById('nav').innerHTML='';
