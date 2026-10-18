@@ -1556,7 +1556,6 @@ function backup(){
     <button class="s" onclick="setQr()">Save QR Link</button>
     <div class="muted">Paste a public link to your Google Pay QR image. It is added to every dues message.</div>
   </div>
-  <div class="card"><h2 style="margin-top:0">Sample Data</h2><div class="muted">Loads test tenants, rooms, rent, and dues across 4 properties. This replaces the current data. Tap twice to confirm.</div><button class="s" onclick="loadSample()">Load Sample Data</button></div>
   <div class="card"><h2 style="margin-top:0">Erase Data</h2>
     ${ui.wipe?`<label>${db.settings.pass?'Enter Passcode':'Set A 6-Digit Passcode'}</label>
       <input id="wpc" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6 digits">
